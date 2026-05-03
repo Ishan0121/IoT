@@ -7,7 +7,8 @@
   <meta name="description" content="Installing and working with Arduino IDE 2.x — compilation pipeline, Serial Monitor, Library Manager.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/experiments/exp02.css">
 </head>
 <body>
 <nav class="topnav">
@@ -30,7 +31,7 @@
 <main class="exp-main">
 
   <!-- IDE LAYOUT SIMULATION -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">💻 Arduino IDE Layout</h2>
     <div class="ide-mockup">
       <div class="ide-titlebar">
@@ -78,7 +79,7 @@
   </section>
 
   <!-- COMPILATION PIPELINE -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">⚙️ Compilation Pipeline</h2>
     <div class="pipeline">
       <div class="pipe-step">
@@ -126,7 +127,7 @@
   </section>
 
   <!-- BOARD CONFIG TABLE -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">⚙️ Board Configuration</h2>
     <div class="table-wrap">
       <table class="data-table">
@@ -152,7 +153,7 @@ sudo usermod -aG dialout $USER
   </section>
 
   <!-- SIMPLE SOLUTION -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">🟢 Simple Solution — First Upload Test</h2>
     <div class="solution-banner simple">⭐ Start Here — the absolute minimum sketch to verify your IDE is installed and uploads correctly.</div>
     <div class="code-container">
@@ -175,7 +176,7 @@ sudo usermod -aG dialout $USER
   </section>
 
   <!-- ADVANCED SOLUTION -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">💾 Advanced Solution — Serial Plotter + Sine Wave</h2>
     <div class="solution-banner advanced">🚀 Advanced — demonstrates F() macro, Serial Plotter graphing, and non-blocking LED blink.</div>
     <div class="code-container">
@@ -219,7 +220,7 @@ sudo usermod -aG dialout $USER
   </section>
 
   <!-- FLOWCHART -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">📊 IDE Workflow Flowchart</h2>
     <div class="flowchart">
       <div class="fc-start">Open Arduino IDE</div>
@@ -244,7 +245,7 @@ sudo usermod -aG dialout $USER
   </section>
 
   <!-- NOTES -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">📝 Notes, Extras & Tips</h2>
     <div class="notes-grid">
       <div class="note-card note-info">
@@ -267,7 +268,7 @@ sudo usermod -aG dialout $USER
   </section>
 
   <!-- FUNCTIONS -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">🔧 Key IDE Functions & Commands</h2>
     <div class="func-list">
       <div class="func-item">
@@ -290,7 +291,7 @@ sudo usermod -aG dialout $USER
   </section>
 
   <!-- COMMON ISSUES -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">❌ Common IDE Issues & Fixes</h2>
     <div class="table-wrap">
       <table class="data-table">
@@ -314,148 +315,7 @@ sudo usermod -aG dialout $USER
   <a href="exp03.html">Exp 03 →</a>
 </footer>
 
-<script src="shared.js"></script>
-<style>
-.ide-mockup {
-  background: #0d1117;
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 12px;
-  overflow: hidden;
-  font-family: 'JetBrains Mono', monospace;
-}
-.ide-titlebar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 14px;
-  background: rgba(255,255,255,0.04);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-}
-.ide-dots { display: flex; gap: 6px; }
-.ide-dots span { width: 11px; height: 11px; border-radius: 50%; display: block; }
-.ide-title { font-size: 11px; color: #5a6477; }
-.ide-toolbar {
-  display: flex;
-  gap: 4px;
-  padding: 7px 10px;
-  background: rgba(255,255,255,0.03);
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  flex-wrap: wrap;
-}
-.ide-toolbtn {
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 5px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: transparent;
-  color: #8b95a8;
-  cursor: pointer;
-  font-family: 'Inter', sans-serif;
-  transition: all 0.15s;
-}
-.ide-toolbtn:hover { background: rgba(255,255,255,0.06); color: #e8ecf1; }
-.ide-tbright { margin-left: auto; }
-.ide-body { display: flex; min-height: 200px; }
-.ide-sidebar {
-  width: 130px;
-  border-right: 1px solid rgba(255,255,255,0.06);
-  padding: 8px 0;
-  flex-shrink: 0;
-  background: rgba(255,255,255,0.02);
-}
-.ide-sb-item {
-  padding: 5px 14px;
-  font-size: 11px;
-  color: #5a6477;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.ide-sb-item:hover { background: rgba(255,255,255,0.05); color: #8b95a8; }
-.ide-sb-active { background: rgba(79,142,247,0.1); color: #4f8ef7; }
-.ide-editor {
-  flex: 1;
-  padding: 12px 0;
-  overflow-x: auto;
-}
-.ide-line {
-  display: flex;
-  font-size: 12px;
-  line-height: 1.7;
-  padding: 0 16px 0 8px;
-  color: #cdd9e5;
-}
-.ide-line-active { background: rgba(79,142,247,0.06); }
-.ide-ln {
-  min-width: 28px;
-  color: #3a4455;
-  user-select: none;
-  padding-right: 12px;
-}
-.ide-output {
-  border-top: 1px solid rgba(255,255,255,0.06);
-}
-.ide-output-header {
-  font-size: 11px;
-  font-weight: 600;
-  color: #5a6477;
-  padding: 6px 14px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-.ide-output-body {
-  padding: 10px 14px;
-  font-size: 11px;
-  color: #8b95a8;
-  line-height: 1.7;
-}
-.pipeline {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.pipe-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  min-width: 90px;
-  flex: 1;
-  text-align: center;
-}
-.pipe-icon {
-  width: 40px; height: 40px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-.pipe-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--text);
-}
-.pipe-detail {
-  font-size: 10px;
-  color: var(--text2);
-  line-height: 1.4;
-}
-.pipe-arrow {
-  font-size: 18px;
-  color: var(--text3);
-  flex-shrink: 0;
-}
-.fc-diamond {
-  background: rgba(245,158,11,0.12);
-  border: 1px solid rgba(245,158,11,0.3);
-  color: var(--amber);
-  padding: 8px 20px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 500;
-}
-</style>
+<script src="js/shared.js"></script>
+
 </body>
 </html>

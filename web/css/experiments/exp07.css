@@ -1,0 +1,5 @@
+/* exp07.css — Exp 07 smart home sensor widget styles */
+.sensor-widget { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; transition: background .3s; }
+.sw-icon  { font-size: 24px; }
+.sw-title { font-size: 11px; font-weight: 600; color: var(--text2); text-transform: uppercase; letter-spacing: .05em; }
+.sw-val   { font-size: 14px; font-weight: 600; color: var(--text); font-family: 'JetBrains Mono', monospace; }

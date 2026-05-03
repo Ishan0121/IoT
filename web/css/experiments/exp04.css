@@ -1,0 +1,30 @@
+/* exp04.css — Exp 04 traffic light simulation styles */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.wrap { padding: 1rem 0; display: flex; flex-direction: column; gap: 16px; }
+.top-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+.sim-card { background: var(--bg4); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.sim-title { font-size: 13px; font-weight: 500; color: var(--text2); }
+canvas#road { border-radius: 8px; display: block; max-width: 100%; }
+.controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btn { font-size: 12px; padding: 5px 14px; border-radius: 6px; border: 1px solid var(--border); background: transparent; color: var(--text); cursor: pointer; transition: background .15s; font-family: Inter, sans-serif; }
+.btn:hover { background: rgba(255,255,255,.06); }
+.phase-tag { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 500; }
+.phase-ns { background: rgba(34,197,94,.15); color: #22c55e; }
+.phase-y  { background: rgba(245,158,11,.15); color: #f59e0b; }
+.phase-ew { background: rgba(79,142,247,.15); color: #4f8ef7; }
+.pin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.pin-table th { text-align: left; padding: 4px 6px; color: var(--text2); font-weight: 500; border-bottom: 1px solid var(--border); }
+.pin-table td { padding: 4px 6px; color: var(--text); border-bottom: 1px solid var(--border); }
+.pin-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.code-box { background: #0c111d; border-radius: 8px; padding: 12px; font-size: 11px; font-family: 'JetBrains Mono', monospace; color: #cdd9e5; overflow-x: auto; white-space: pre; line-height: 1.6; border: 1px solid var(--border); }
+.timer-bar-wrap { height: 6px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden; }
+.timer-bar { height: 100%; border-radius: 3px; transition: width .1s linear; }
+.stat-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.stat-item { flex: 1; min-width: 80px; background: rgba(255,255,255,.04); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; }
+.stat-num { font-size: 18px; font-weight: 500; color: var(--text); }
+.stat-lbl { font-size: 11px; color: var(--text2); }
+.solution-banner { padding: 10px 14px; border-radius: 8px; font-size: 12.5px; margin-bottom: 12px; }
+.solution-banner code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.solution-banner.simple  { background: rgba(34,197,94,0.08);  border: 1px solid rgba(34,197,94,0.25);  color: var(--green);  }
+.solution-banner.advanced { background: rgba(79,142,247,0.08); border: 1px solid rgba(79,142,247,0.25); color: var(--accent); }
+@media(max-width:500px) { .top-row { grid-template-columns: 1fr; } }

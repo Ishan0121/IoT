@@ -7,7 +7,8 @@
   <meta name="description" content="Blinking LED Sketch with Arduino — delay vs millis, PWM fade, non-blocking timing.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/experiments/exp03.css">
 </head>
 <body>
 <nav class="topnav">
@@ -30,7 +31,7 @@
 <main class="exp-main">
 
   <!-- LED SIMULATOR -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">🔌 Circuit Diagram</h2>
     <div class="cards-3">
       <div class="info-card" style="--card-accent:#22c55e">
@@ -64,7 +65,7 @@
   </section>
 
   <!-- SIMPLE SOLUTION -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">🟢 Simple Solution — delay() Blink</h2>
     <div class="solution-banner simple">⭐ Start Here — uses only <code>delay()</code> and <code>digitalWrite()</code>. Perfect for your first sketch.</div>
     <!-- Simple sim -->
@@ -101,7 +102,7 @@
   </section>
 
   <!-- ADVANCED SOLUTION -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">💡 Live LED Simulator</h2>
     <div class="sim-frame">
       <div style="padding:20px 16px">
@@ -136,7 +137,7 @@
   </section>
 
   <!-- CIRCUIT -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">💾 Advanced Solution — millis() + PWM Fade</h2>
     <div class="solution-banner advanced">🚀 Advanced — non-blocking timing with <code>millis()</code> and PWM brightness fade.</div>
     <div class="code-container">
@@ -209,7 +210,7 @@
   </section>
 
   <!-- FLOWCHART -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">📊 Program Flowchart</h2>
     <div class="flowchart">
       <div class="fc-start">START</div>
@@ -247,7 +248,7 @@
   </section>
 
   <!-- NOTES -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">📝 Notes, Extras & Key Concepts</h2>
     <div class="notes-grid">
       <div class="note-card note-warn">
@@ -270,7 +271,7 @@
   </section>
 
   <!-- FUNCTIONS -->
-  <section class="section">
+  <section class="section reveal">
     <h2 class="section-title">🔧 Key Functions</h2>
     <div class="func-list">
       <div class="func-item">
@@ -300,86 +301,7 @@
   <a href="exp04.html">Exp 04 →</a>
 </footer>
 
-<script src="shared.js"></script>
-<script>
-let mode = 'blink';
-let ledOn = false;
-let blinkCount = 0;
-let lastToggle = Date.now();
-let onTime = 700, offTime = 300;
-let fadeDir = 1, fadeBr = 0;
+<script src="js/shared.js"></script>
 
-function setMode(m) {
-  mode = m;
-  document.querySelectorAll('.sim-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btnMode1').classList.toggle('active', m==='blink');
-  document.getElementById('btnMode2').classList.toggle('active', m==='fade');
-  document.getElementById('btnMode3').classList.toggle('active', m==='off');
-}
 
-document.getElementById('onTime').addEventListener('input', function(){
-  onTime = +this.value;
-  document.getElementById('onTimeVal').textContent = onTime + ' ms';
-});
-document.getElementById('offTime').addEventListener('input', function(){
-  offTime = +this.value;
-  document.getElementById('offTimeVal').textContent = offTime + ' ms';
-});
-
-function setLed(brightness) {
-  const bulb = document.getElementById('ledBulb');
-  const alpha = brightness / 255;
-  const glow = Math.round(alpha * 32);
-  bulb.style.background = `rgba(34,197,94,${0.2 + alpha * 0.8})`;
-  bulb.style.boxShadow = `0 0 ${glow}px ${Math.round(glow/2)}px rgba(34,197,94,${alpha * 0.8})`;
-  document.getElementById('brightness').textContent = Math.round(brightness);
-  document.getElementById('ledStateLabel').textContent = brightness > 0 ? 'ON' : 'OFF';
-  document.getElementById('ledStateLabel').style.color = brightness > 0 ? 'var(--green)' : 'var(--text2)';
-}
-
-function tick() {
-  const now = Date.now();
-  if (mode === 'blink') {
-    const interval = ledOn ? onTime : offTime;
-    if (now - lastToggle >= interval) {
-      lastToggle = now;
-      ledOn = !ledOn;
-      if (ledOn) {
-        blinkCount++;
-        document.getElementById('blinkCount').textContent = blinkCount;
-      }
-    }
-    setLed(ledOn ? 255 : 0);
-  } else if (mode === 'fade') {
-    fadeBr += fadeDir * 4;
-    if (fadeBr >= 255) { fadeBr = 255; fadeDir = -1; }
-    if (fadeBr <= 0)   { fadeBr = 0;   fadeDir = 1; }
-    setLed(fadeBr);
-  } else {
-    setLed(0);
-  }
-  requestAnimationFrame(tick);
-}
-tick();
-// Simple LED blink sim (1s on/1s off)
-;(function(){
-  let on=false;
-  setInterval(()=>{
-    on=!on;
-    const b=document.getElementById('simpleLed');
-    const s=document.getElementById('simpleLedState');
-    if(!b)return;
-    b.style.background=on?'#22c55e':'rgba(34,197,94,0.1)';
-    b.style.boxShadow=on?'0 0 22px 8px rgba(34,197,94,0.6)':'none';
-    s.textContent=on?'ON':'OFF';
-    s.style.color=on?'var(--green)':'var(--text2)';
-  },1000);
-})();
-</script>
-<style>
-.solution-banner{padding:10px 14px;border-radius:8px;font-size:12.5px;margin-bottom:12px;}
-.solution-banner code{background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;}
-.solution-banner.simple{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
-.solution-banner.advanced{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.25);color:var(--accent);}
-</style>
 </html>

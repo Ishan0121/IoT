@@ -5,7 +5,8 @@
 <title>Exp 08 — DC Motor Control | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/experiments/exp08.css">
 </head>
 <body>
 <nav class="topnav">
@@ -26,7 +27,7 @@
 
 <main class="exp-main">
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔌 L298N H-Bridge Circuit</h2>
   <div class="cards-3">
     <div class="info-card" style="--card-accent:#f97316">
@@ -63,7 +64,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution — Basic DC Motor Speed Control</h2>
   <div class="solution-banner simple">⭐ Start Here — spin motor forward, then reverse. Fixed speed, no potentiometer or buttons needed.</div>
   <!-- Simple Sim -->
@@ -117,7 +118,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔄 Motor Control Simulator</h2>
   <div class="sim-frame">
     <div style="padding:20px 16px">
@@ -150,7 +151,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">💾 Advanced Solution — Pot Speed + Soft-Start + Debounced Button</h2>
   <div class="solution-banner advanced">🚀 Advanced — potentiometer speed control, soft-start ramp, debounced direction toggle button.</div>
   <div class="code-container">
@@ -217,7 +218,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📊 Program Flowchart</h2>
   <div class="flowchart">
     <div class="fc-start">START — setup()</div>
@@ -240,7 +241,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📝 Notes & Extras</h2>
   <div class="notes-grid">
     <div class="note-card note-info">
@@ -262,7 +263,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔧 Key Functions</h2>
   <div class="func-list">
     <div class="func-item"><code class="func-sig">analogWrite(ENA, 0–255)</code><div class="func-desc">PWM on Enable pin controls motor speed. 0=stopped, 255=full speed. Works on PWM-capable pins only (D3,D5,D6,D9,D10,D11).</div></div>
@@ -279,129 +280,9 @@
   <span>Exp 08 of 10 · DC Motor</span>
   <a href="exp09.html">Exp 09 →</a>
 </footer>
-<script src="shared.js"></script>
-<script>
-const mc = document.getElementById('motorCanvas');
-const {ctx:mctx,W:mcW,H:mcH} = hiDPI(mc);
-let motorAngle = 0, motorSpeed = 0, motorDir = 1, braked = false;
-let animFrame;
+<script src="js/shared.js"></script>
 
-function drawMotor(){
-  const W=mcW,H=mcH,cx=W/2,cy=H/2;
-  mctx.clearRect(0,0,W,H);
-  mctx.fillStyle='#0c111d';mctx.fillRect(0,0,W,H);
-  // Outer casing
-  mctx.strokeStyle='rgba(249,115,22,0.3)';mctx.lineWidth=8;
-  mctx.beginPath();mctx.arc(cx,cy,70,0,Math.PI*2);mctx.stroke();
-  // Rotor
-  mctx.save();mctx.translate(cx,cy);mctx.rotate(motorAngle*Math.PI/180);
-  for(let i=0;i<6;i++){
-    const a=i*60*Math.PI/180;
-    mctx.strokeStyle=`rgba(249,115,22,${0.4+0.1*i})`;mctx.lineWidth=3;
-    mctx.beginPath();mctx.moveTo(0,0);mctx.lineTo(Math.cos(a)*55,Math.sin(a)*55);mctx.stroke();
-    mctx.fillStyle='rgba(249,115,22,0.6)';
-    mctx.beginPath();mctx.arc(Math.cos(a)*55,Math.sin(a)*55,5,0,Math.PI*2);mctx.fill();
-  }
-  mctx.restore();
-  // Center
-  mctx.fillStyle='#f97316';mctx.beginPath();mctx.arc(cx,cy,10,0,Math.PI*2);mctx.fill();
-  // Speed arc
-  const pct=motorSpeed/255;
-  mctx.strokeStyle=braked?'#ef4444':pct>0?'#f97316':'rgba(255,255,255,0.1)';
-  mctx.lineWidth=4;mctx.beginPath();
-  mctx.arc(cx,cy,78,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);mctx.stroke();
-  // Direction arrow
-  if(motorSpeed>5){
-    mctx.fillStyle='rgba(249,115,22,0.7)';mctx.font='14px Inter,sans-serif';mctx.textAlign='center';
-    mctx.fillText(motorDir>0?'↻':'↺',cx,cy+46);
-  }
-}
 
-function animate(){
-  if(!braked && motorSpeed>0){
-    motorAngle=(motorAngle+motorSpeed*motorDir*0.08)%360;
-  }
-  drawMotor();
-  animFrame=requestAnimationFrame(animate);
-}
-
-function updateMotor(){
-  braked=false;
-  const val=+document.getElementById('speedSlider').value;
-  motorSpeed=val<25?0:val;
-  const pct=Math.round((motorSpeed/255)*100);
-  document.getElementById('pwmDisplay').textContent=motorSpeed;
-  document.getElementById('pctDisplay').textContent=pct+'%';
-  document.getElementById('rpmDisplay').textContent='~'+Math.round(pct*1.5);
-  document.getElementById('in1').textContent=motorDir>0?'HIGH':'LOW';
-  document.getElementById('in2').textContent=motorDir>0?'LOW':'HIGH';
-  document.getElementById('ena').textContent=motorSpeed;
-}
-
-function toggleDir(){
-  motorDir*=-1;
-  motorSpeed=0;
-  document.getElementById('dirLabel').textContent=motorDir>0?'↻ FORWARD':'↺ REVERSE';
-  document.getElementById('dirLabel').style.color=motorDir>0?'var(--green)':'var(--amber)';
-  updateMotor();
-}
-
-function brakeMotor(){
-  braked=true; motorSpeed=0;
-  document.getElementById('speedSlider').value=0;
-  updateMotor();
-}
-
-animate();
-updateMotor();
-
-// ── Simple Sim Logic ──
-(function(){
-  const cv = document.getElementById('sim8Motor');
-  if(!cv) return;
-  const ctx = hiDPI(cv).ctx;
-  const W=160, H=160;
-  
-  const states = [
-    {n:'FORWARD (128)', d:3000, spd:4, dir:1, c:'var(--green)'},
-    {n:'STOP (0)', d:500, spd:0, dir:0, c:'var(--text2)'},
-    {n:'REVERSE (255)', d:3000, spd:8, dir:-1, c:'var(--red)'},
-    {n:'STOP (0)', d:500, spd:0, dir:0, c:'var(--text2)'}
-  ];
-  let sIdx = 0;
-  let angle = 0;
-  let sTime = performance.now();
-  
-  function drawSim8(){
-    const now = performance.now();
-    const st = states[sIdx];
-    let elapsed = now - sTime;
-    if(elapsed >= st.d){
-      elapsed = 0; sTime = now;
-      sIdx = (sIdx+1)%states.length;
-      document.getElementById('sim8State').textContent = states[sIdx].n;
-      document.getElementById('sim8State').style.color = states[sIdx].c;
-      document.getElementById('sim8Bar').style.background = states[sIdx].c;
-    }
-    document.getElementById('sim8Bar').style.width = Math.max(0,100*(1 - elapsed/states[sIdx].d)) + '%';
-    
-    angle += st.spd * st.dir;
-    ctx.fillStyle='#0c111d'; ctx.fillRect(0,0,W,H);
-    const cx=W/2, cy=H/2;
-    ctx.fillStyle='#2C2C2A'; ctx.beginPath(); ctx.arc(cx,cy,40,0,Math.PI*2); ctx.fill();
-    ctx.strokeStyle='#4f8ef7'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(cx,cy,40,0,Math.PI*2); ctx.stroke();
-    
-    ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle*Math.PI/180);
-    ctx.fillStyle='#d4d4d4'; ctx.fillRect(-5,-20,10,40);
-    ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(0,-15,4,0,Math.PI*2); ctx.fill();
-    ctx.restore();
-    
-    requestAnimationFrame(drawSim8);
-  }
-  requestAnimationFrame(drawSim8);
-})();
-</script>
-<style>
-</style>
+<script src="js/experiments/exp08-sim.js"></script>
 </body>
 </html>

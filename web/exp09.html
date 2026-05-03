@@ -5,7 +5,8 @@
 <title>Exp 09 — Working with Shields | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/experiments/exp09.css">
 </head>
 <body>
 <nav class="topnav">
@@ -26,7 +27,7 @@
 
 <main class="exp-main">
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📚 Shield Stacking Concept</h2>
   <div class="flow-diagram">
     <div class="flow-node" style="--nc:#6366f1">
@@ -46,7 +47,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔌 Reserved Pins Warning</h2>
   <div class="table-wrap">
     <table class="data-table">
@@ -63,7 +64,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🌐 HTTP Protocol Flow</h2>
   <div class="flowchart">
     <div class="fc-box" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.3);color:var(--purple)">Browser types IP address → sends HTTP GET / request</div>
@@ -80,7 +81,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution — Basic Ethernet Web Server</h2>
   <div class="solution-banner simple">⭐ Start Here — serve a plain-text response. No sensors, no HTML styling needed. Just verify the shield works.</div>
   <!-- Simple Sim -->
@@ -145,7 +146,7 @@ EthernetServer server(<span class="cn">80</span>);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🌐 Web Dashboard Preview</h2>
   <div style="background:#1a1a2e;border-radius:12px;padding:20px;border:1px solid var(--border)">
     <div style="color:#00d4ff;font-size:20px;font-weight:700;margin-bottom:12px">📡 Arduino Sensor Dashboard</div>
@@ -183,7 +184,7 @@ EthernetServer server(<span class="cn">80</span>);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">💾 Advanced Solution — HTML Dashboard + Sensor Data + LED Control</h2>
   <div class="solution-banner advanced">🚀 Advanced — full HTML page, live DHT11 + LDR readings, LED on/off via URL, auto-refresh.</div>
   <div class="code-container">
@@ -262,7 +263,7 @@ DHT dht(DHT_PIN,DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📝 Notes & Extras</h2>
   <div class="notes-grid">
     <div class="note-card note-info">
@@ -284,7 +285,7 @@ DHT dht(DHT_PIN,DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔧 Key Functions</h2>
   <div class="func-list">
     <div class="func-item"><code class="func-sig">Ethernet.begin(mac)</code><div class="func-desc">Initialize Ethernet with DHCP. Returns 0 on failure. Call once in setup(). The MAC address must be unique on your LAN.</div></div>
@@ -301,37 +302,9 @@ DHT dht(DHT_PIN,DHTTYPE);
   <span>Exp 09 of 10 · Shields</span>
   <a href="exp10.html">Exp 10 →</a>
 </footer>
-<script src="shared.js"></script>
-<script>
-// Animate demo dashboard
-let uptime=0, ledOn=false;
-setInterval(()=>{
-  uptime++;
-  document.getElementById('demoUptime').textContent=uptime;
-  document.getElementById('demoTemp').textContent=(22+Math.random()*4).toFixed(1);
-  document.getElementById('demoHum').textContent=Math.round(55+Math.random()*15);
-  document.getElementById('demoLDR').textContent=Math.round(300+Math.random()*400);
-},2000);
+<script src="js/shared.js"></script>
 
-function setLED(on){
-  ledOn=on;
-  document.getElementById('ledStateDemo').textContent=on?'ON':'OFF';
-  document.getElementById('ledStateDemo').style.color=on?'#27ae60':'#c0392b';
-}
 
-// ── Simple Sim Logic ──
-let sim9Start = performance.now();
-function sim9Refresh(){
-  const b = document.getElementById('sim9Browser');
-  if(!b) return;
-  b.innerHTML = '<span style="color:#888;font-size:12px">Connecting to 192.168.1.100...</span>';
-  setTimeout(()=>{
-    const uptime = Math.floor((performance.now() - sim9Start)/1000);
-    b.innerHTML = `Hello from Arduino!<br>Uptime: ${uptime} seconds`;
-  }, 400);
-}
-</script>
-<style>
-</style>
+<script src="js/experiments/exp09-sim.js"></script>
 </body>
 </html>

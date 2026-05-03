@@ -5,7 +5,8 @@
 <title>Exp 07 — Smart Home Sensors | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css">
+<link rel="stylesheet" href="css/shared.css">
+<link rel="stylesheet" href="css/experiments/exp07.css">
 </head>
 <body>
 <nav class="topnav">
@@ -26,7 +27,7 @@
 
 <main class="exp-main">
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🛠️ Common Smart Home Sensors Reference</h2>
   <div class="table-wrap">
     <table class="data-table">
@@ -53,7 +54,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔌 Circuit Pin Map</h2>
   <div class="table-wrap">
     <table class="data-table">
@@ -72,7 +73,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution — PIR Motion Sensor + LED</h2>
   <div class="solution-banner simple">⭐ Start Here — one sensor (PIR), one output (LED). Just 2 pins and a <code>digitalRead</code>.</div>
   <!-- Simple Sim -->
@@ -119,7 +120,7 @@
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution 2 — DHT11 Temp &amp; Humidity</h2>
   <div class="solution-banner simple">⭐ Beginner — requires the DHT sensor library. Reads and prints climate data.</div>
   
@@ -176,7 +177,7 @@ DHT dht(DHTPIN, DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution 3 — LDR Light Sensor</h2>
   <div class="solution-banner simple">⭐ Beginner — uses analogRead to detect darkness and turn on a relay/lamp automatically.</div>
 
@@ -223,7 +224,7 @@ DHT dht(DHTPIN, DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🏠 Smart Home Dashboard Simulator</h2>
   <div class="sim-frame">
     <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
@@ -277,7 +278,7 @@ DHT dht(DHTPIN, DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">💾 Advanced Solution — PIR + DHT11 + LDR + MQ-2 + Relay</h2>
   <div class="solution-banner advanced">🚀 Advanced — 4 sensors working together with non-blocking timers, relay auto-control, and gas alarm.</div>
   <div class="code-container">
@@ -348,7 +349,7 @@ DHT dht(DHT_PIN, DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📊 Event-Driven Architecture Flowchart</h2>
   <div class="flowchart">
     <div class="fc-start">setup() — init sensors & pins</div>
@@ -367,7 +368,7 @@ DHT dht(DHT_PIN, DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📝 Notes & Extras</h2>
   <div class="notes-grid">
     <div class="note-card note-warn">
@@ -389,7 +390,7 @@ DHT dht(DHT_PIN, DHTTYPE);
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔧 Key Functions</h2>
   <div class="func-list">
     <div class="func-item"><code class="func-sig">dht.readTemperature() / dht.readHumidity()</code><div class="func-desc">Read temperature (°C) and humidity (%) from DHT11. Returns NaN on error. DHT11 needs 2s minimum between readings — track timing with millis().</div></div>
@@ -405,108 +406,9 @@ DHT dht(DHT_PIN, DHTTYPE);
   <span>Exp 07 of 10 · Smart Home</span>
   <a href="exp08.html">Exp 08 →</a>
 </footer>
-<script src="shared.js"></script>
-<script>
-const logEl = document.getElementById('systemLog');
-let relayOn=false, pirTimeout=null;
+<script src="js/shared.js"></script>
 
-function log(msg){
-  const t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  logEl.innerHTML=`<span style="color:var(--text3)">[${t}]</span> ${msg}\n`+logEl.innerHTML;
-}
 
-function triggerPIR(){
-  document.getElementById('pirVal').textContent='Motion!';
-  document.getElementById('pirVal').style.color='var(--green)';
-  document.getElementById('pirWidget').style.background='rgba(34,197,94,0.08)';
-  if(!relayOn){relayOn=true;setRelay(true);log('<span style="color:var(--green)">[PIR] Motion detected → Relay ON</span>');}
-  clearTimeout(pirTimeout);
-  pirTimeout=setTimeout(()=>{
-    document.getElementById('pirVal').textContent='No Motion';
-    document.getElementById('pirVal').style.color='var(--text2)';
-    document.getElementById('pirWidget').style.background='';
-    relayOn=false;setRelay(false);
-    log('<span style="color:var(--text2)">[PIR] No motion 10s → Relay OFF</span>');
-  },5000);
-}
-
-function setRelay(on){
-  const lamp=document.getElementById('relayLamp');
-  document.getElementById('relayVal').textContent=on?'ON':'OFF';
-  document.getElementById('relayVal').style.color=on?'var(--amber)':'var(--text2)';
-  lamp.style.background=on?'rgba(245,158,11,0.8)':'rgba(255,255,255,0.05)';
-  lamp.style.boxShadow=on?'0 0 20px 6px rgba(245,158,11,0.5)':'none';
-}
-
-function updateTemp(v){document.getElementById('tempVal').textContent=v+'°C';if(v>35)log('<span style="color:var(--red)">[DHT] ⚠ TEMP HIGH: '+v+'°C</span>');else log('[DHT] Temp: '+v+'°C');}
-function updateHum(v){document.getElementById('humVal').textContent=v+'%';if(v>80)log('<span style="color:var(--amber)">[DHT] ⚠ HUMID HIGH: '+v+'%</span>');}
-function updateLDR(v){document.getElementById('ldrVal').textContent=v;const dark=v>600;log('[LDR] '+v+(dark?' → DARK (LED ON)':' → BRIGHT'));}
-function updateGas(v){
-  const danger=v>400;
-  document.getElementById('gasVal').textContent=v+(danger?' — ⚠ DANGER':' — Safe');
-  document.getElementById('gasVal').style.color=danger?'var(--red)':'var(--green)';
-  document.getElementById('gasWidget').style.background=danger?'rgba(239,68,68,0.08)':'';
-  if(danger) log('<span style="color:var(--red)">[GAS] ⚠ DANGER! Level: '+v+' — ALARM ON</span>');
-}
-log('<span style="color:var(--green)">System initialized. Monitoring started.</span>');
-
-// ── Simple Sim Logic ──
-function sim7Trigger(active) {
-  const led = document.getElementById('sim7Led');
-  const serial = document.getElementById('sim7Serial');
-  if(!led || !serial) return;
-  
-  if(active) {
-    led.style.background = '#22c55e';
-    led.style.boxShadow = '0 0 20px 6px rgba(34,197,94,0.6)';
-    serial.textContent += "Motion detected!\n";
-    serial.scrollTop = serial.scrollHeight;
-    if (serial.textContent.length > 500) serial.textContent = serial.textContent.substring(serial.textContent.length - 400);
-  } else {
-    led.style.background = 'rgba(34,197,94,0.1)';
-    led.style.boxShadow = 'none';
-  }
-}
-sim7Trigger(false);
-
-// DHT11 Simple Logic
-setInterval(()=>{
-  const s = document.getElementById('sim7DhtSerial');
-  const t = document.getElementById('sim7DhtTemp');
-  const h = document.getElementById('sim7DhtHum');
-  if(!s||!t||!h) return;
-  s.textContent += `Temp: ${t.value}.00°C  |  Humidity: ${h.value}.00%\n`;
-  s.scrollTop = s.scrollHeight;
-  if(s.textContent.length > 500) s.textContent = s.textContent.substring(s.textContent.length - 400);
-}, 2000);
-
-// LDR Simple Logic
-function sim7UpdateLdr(v) {
-  const lbl = document.getElementById('s7LdrV');
-  const lamp = document.getElementById('sim7Lamp');
-  const txt = document.getElementById('sim7LampLbl');
-  if(!lbl||!lamp) return;
-  lbl.textContent = v;
-  if(v > 600) {
-    lamp.style.background = '#f59e0b';
-    lamp.style.boxShadow = '0 0 20px 4px rgba(245,158,11,0.5)';
-    txt.textContent = 'LAMP ON (DARK)';
-    txt.style.color = '#f59e0b';
-  } else {
-    lamp.style.background = 'rgba(255,255,255,0.05)';
-    lamp.style.boxShadow = 'none';
-    txt.textContent = 'LAMP OFF (BRIGHT)';
-    txt.style.color = 'var(--text2)';
-  }
-}
-sim7UpdateLdr(300);
-
-</script>
-<style>
-.sensor-widget{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;transition:background .3s}
-.sw-icon{font-size:24px}
-.sw-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
-.sw-val{font-size:14px;font-weight:600;color:var(--text);font-family:'JetBrains Mono',monospace}
-</style>
+<script src="js/experiments/exp07-sim.js"></script>
 </body>
 </html>

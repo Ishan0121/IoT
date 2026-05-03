@@ -5,34 +5,9 @@
 <title>Exp 04 — 4-Way Traffic Light | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared.css">
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-.wrap{padding:1rem 0;display:flex;flex-direction:column;gap:16px}
-.top-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
-.sim-card{background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
-.sim-title{font-size:13px;font-weight:500;color:var(--text2)}
-canvas#road{border-radius:8px;display:block;max-width:100%}
-.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.btn{font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:background .15s;font-family:Inter,sans-serif}
-.btn:hover{background:rgba(255,255,255,.06)}
-.phase-tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
-.phase-ns{background:rgba(34,197,94,.15);color:#22c55e}
-.phase-y{background:rgba(245,158,11,.15);color:#f59e0b}
-.phase-ew{background:rgba(79,142,247,.15);color:#4f8ef7}
-.pin-table{width:100%;border-collapse:collapse;font-size:12px}
-.pin-table th{text-align:left;padding:4px 6px;color:var(--text2);font-weight:500;border-bottom:1px solid var(--border)}
-.pin-table td{padding:4px 6px;color:var(--text);border-bottom:1px solid var(--border)}
-.pin-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
-.code-box{background:#0c111d;border-radius:8px;padding:12px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#cdd9e5;overflow-x:auto;white-space:pre;line-height:1.6;border:1px solid var(--border)}
-.timer-bar-wrap{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
-.timer-bar{height:100%;border-radius:3px;transition:width .1s linear}
-.stat-row{display:flex;gap:8px;flex-wrap:wrap}
-.stat-item{flex:1;min-width:80px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
-.stat-num{font-size:18px;font-weight:500;color:var(--text)}
-.stat-lbl{font-size:11px;color:var(--text2)}
-@media(max-width:500px){.top-row{grid-template-columns:1fr}}
-</style>
+<link rel="stylesheet" href="css/shared.css">
+
+<link rel="stylesheet" href="css/experiments/exp04.css">
 </head>
 <body>
 <nav class="topnav">
@@ -53,7 +28,7 @@ canvas#road{border-radius:8px;display:block;max-width:100%}
 
 <main class="exp-main">
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution — 6 Pins, delay()-based</h2>
   <div class="solution-banner simple">⭐ Start Here — N/S and E/W share 3 pins each (6 total). Pure <code>delay()</code>, no helper functions.</div>
   <!-- Simple 2-direction sim -->
@@ -121,7 +96,7 @@ canvas#road{border-radius:8px;display:block;max-width:100%}
 </section>
 
 <!-- ADVANCED SOLUTION -->
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🚦 Live Intersection Simulation</h2>
   <div class="wrap">
     <div class="top-row">
@@ -168,7 +143,7 @@ canvas#road{border-radius:8px;display:block;max-width:100%}
 </section>
 
 <!-- SIMPLE SOLUTION -->
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">💾 Advanced Solution — 12 Pins + FSM + Emergency</h2>
   <div class="solution-banner advanced">🚀 Advanced — separate pins for N, S, E, W (12 total). Helper functions, arrays, and emergency override button.</div>
     <pre class="code-block" id="code04"><span class="cm">// Experiment 04 — 4-Way Traffic Light
@@ -242,7 +217,7 @@ canvas#road{border-radius:8px;display:block;max-width:100%}
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📊 FSM Flowchart</h2>
   <div class="flowchart">
     <div class="fc-start">START — setup()</div>
@@ -267,7 +242,7 @@ canvas#road{border-radius:8px;display:block;max-width:100%}
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">📝 Notes & Extras</h2>
   <div class="notes-grid">
     <div class="note-card note-info">
@@ -289,7 +264,7 @@ canvas#road{border-radius:8px;display:block;max-width:100%}
   </div>
 </section>
 
-<section class="section">
+<section class="section reveal">
   <h2 class="section-title">🔧 Key Functions Used</h2>
   <div class="func-list">
     <div class="func-item"><code class="func-sig">setSignal(r, y, g, color)</code><div class="func-desc">Helper function: sets RED/YELLOW/GREEN pin states for one direction. <code>color</code>: 0=RED, 1=YELLOW, 2=GREEN. Reduces 12 digitalWrite calls to 1 readable call.</div></div>
@@ -308,174 +283,10 @@ canvas#road{border-radius:8px;display:block;max-width:100%}
   <a href="exp05.html">Exp 05 →</a>
 </footer>
 
-<script src="shared.js"></script>
-<script>
-const cv=document.getElementById('road');
-const {ctx,W,H}=hiDPI(cv);
-const CX=W/2,CY=H/2,RW=60;
-const PHASES=[
-  {name:'N/S Green',dur:5000,ns:[0,0,1],ew:[1,0,0],tag:'phase-ns',bar:'#22c55e'},
-  {name:'N/S Yellow',dur:2000,ns:[0,1,0],ew:[1,0,0],tag:'phase-y',bar:'#f59e0b'},
-  {name:'All Red',dur:500,ns:[1,0,0],ew:[1,0,0],tag:'phase-y',bar:'#5a6477'},
-  {name:'E/W Green',dur:5000,ns:[1,0,0],ew:[0,0,1],tag:'phase-ew',bar:'#4f8ef7'},
-  {name:'E/W Yellow',dur:2000,ns:[1,0,0],ew:[0,1,0],tag:'phase-y',bar:'#f59e0b'},
-  {name:'All Red',dur:500,ns:[1,0,0],ew:[1,0,0],tag:'phase-y',bar:'#5a6477'},
-];
-let phase=0,elapsed=0,last=performance.now(),running=true;
-let cntNS=0,cntEW=0,total=0;
-let emergency=false;
+<script src="js/shared.js"></script>
 
-function draw(){
-  const p=PHASES[phase];
-  const ns=emergency ? [1,0,0] : p.ns;
-  const ew=emergency ? [1,0,0] : p.ew;
-  const dark=matchMedia('(prefers-color-scheme:dark)').matches;
-  const road=dark?'#2C2C2A':'#D3D1C7';
-  const lane=dark?'#F1EFE8':'#888780';
-  const grass=dark?'#1a2218':'#c8e8b0';
-  ctx.fillStyle=grass;ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=road;
-  ctx.fillRect(CX-RW/2,0,RW,H);ctx.fillRect(0,CY-RW/2,W,RW);
-  ctx.setLineDash([14,10]);ctx.strokeStyle=lane;ctx.lineWidth=1.5;
-  ctx.beginPath();ctx.moveTo(CX,0);ctx.lineTo(CX,CY-RW/2-2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(CX,CY+RW/2+2);ctx.lineTo(CX,H);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(0,CY);ctx.lineTo(CX-RW/2-2,CY);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(CX+RW/2+2,CY);ctx.lineTo(W,CY);ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.fillStyle=road;ctx.fillRect(CX-RW/2,CY-RW/2,RW,RW);
-  function drawLight(x,y,rot,lights){
-    ctx.save();ctx.translate(x,y);ctx.rotate(rot);
-    const lw=14,lh=38,lx=-7,ly=-19;
-    ctx.fillStyle='#1a1a1a';roundRect(ctx,lx,ly,lw,lh,3);ctx.fill();
-    [[0,lights[2],'#22c55e'],[1,lights[1],'#f59e0b'],[2,lights[0],'#ef4444']].forEach(([i,on,col])=>{
-      ctx.beginPath();ctx.arc(0,ly+6+i*13,4.5,0,Math.PI*2);
-      ctx.fillStyle=on?col:'#2C2C2A';ctx.fill();
-      if(on){ctx.globalAlpha=.25;ctx.beginPath();ctx.arc(0,ly+6+i*13,8,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.globalAlpha=1;}
-    });
-    ctx.restore();
-  }
-  drawLight(CX-RW/2-14,CY-RW/2-14,0,ns);
-  drawLight(CX+RW/2+14,CY+RW/2+14,Math.PI,ns);
-  drawLight(CX+RW/2+14,CY-RW/2-14,Math.PI/2,ew);
-  drawLight(CX-RW/2-14,CY+RW/2+14,-Math.PI/2,ew);
-  ctx.font='bold 10px Inter,sans-serif';ctx.textAlign='center';
-  ctx.fillStyle=dark?'#B4B2A9':'#5F5E5A';
-  ctx.fillText('N',CX,14);ctx.fillText('S',CX,H-6);
-  ctx.fillText('W',10,CY+4);ctx.fillText('E',W-10,CY+4);
-}
-function updateUI(){
-  const p=PHASES[phase];
-  const pct=Math.max(0,1-(elapsed/p.dur));
-  
-  const tag=document.getElementById('phaseTag');
-  if(emergency) {
-    document.getElementById('timerBar').style.width='100%';
-    document.getElementById('timerBar').style.background='#ef4444';
-    tag.textContent='Phase: EMERGENCY (ALL RED)';
-    tag.className='phase-tag';
-    tag.style.color='var(--red)';
-  } else {
-    document.getElementById('timerBar').style.width=(pct*100)+'%';
-    document.getElementById('timerBar').style.background=p.bar;
-    tag.textContent='Phase: '+p.name;
-    tag.className='phase-tag '+p.tag;
-    tag.style.color='';
-  }
-  document.getElementById('cntNS').textContent=cntNS;
-  document.getElementById('cntEW').textContent=cntEW;
-  document.getElementById('cntTotal').textContent=total;
-}
-function tick(now){
-  if(running && !emergency){
-    const dt=Math.min(now-last,200);elapsed+=dt;
-    if(elapsed>=PHASES[phase].dur){
-      elapsed=0;const prev=phase;phase=(phase+1)%6;total++;
-      if(prev===0)cntNS++;if(prev===3)cntEW++;
-    }
-  }
-  last=now;draw();updateUI();requestAnimationFrame(tick);
-}
-function togglePlay(){running=!running;last=performance.now();document.getElementById('btnPlay').textContent=running?'⏸ Pause':'▶ Play';}
-function toggleEmergency() {
-  emergency = !emergency;
-  const btn = document.getElementById('btnEmerg');
-  if(emergency) {
-    btn.style.background = 'rgba(239,68,68,0.15)';
-    btn.style.borderColor = 'rgba(239,68,68,0.8)';
-  } else {
-    btn.style.background = '';
-    btn.style.borderColor = 'rgba(239,68,68,0.5)';
-    last=performance.now(); // prevent sudden jump
-  }
-}
-function resetSim(){phase=0;elapsed=0;cntNS=0;cntEW=0;total=0;last=performance.now();emergency=false;document.getElementById('btnEmerg').style.background='';document.getElementById('btnEmerg').style.borderColor='rgba(239,68,68,0.5)';}
-requestAnimationFrame(tick);
 
-// ── Simple 6-pin simulation ─────────────────
-const sc2=document.getElementById('simpleRoad');
-const sc2x=sc2?(()=>{const {ctx:c}=hiDPI(sc2);return c;})():null;
-const SIMPLE_PHASES=[
-  {name:'N/S GREEN',dur:5000,ns:[0,0,1],ew:[1,0,0],bar:'#22c55e'},
-  {name:'N/S YELLOW',dur:2000,ns:[0,1,0],ew:[1,0,0],bar:'#f59e0b'},
-  {name:'ALL RED',dur:500,ns:[1,0,0],ew:[1,0,0],bar:'#5a6477'},
-  {name:'E/W GREEN',dur:5000,ns:[1,0,0],ew:[0,0,1],bar:'#4f8ef7'},
-  {name:'E/W YELLOW',dur:2000,ns:[1,0,0],ew:[0,1,0],bar:'#f59e0b'},
-  {name:'ALL RED',dur:500,ns:[1,0,0],ew:[1,0,0],bar:'#5a6477'},
-];
-let sp=0,se=0,sl=performance.now(),sr=true;
-function drawSimple(){
-  if(!sc2x)return;
-  const p=SIMPLE_PHASES[sp],ns=p.ns,ew=p.ew;
-  const W=240,H=240,CX=120,CY=120,RW=50;
-  sc2x.fillStyle='#0a180a';sc2x.fillRect(0,0,W,H);
-  sc2x.fillStyle='#2a2a28';
-  sc2x.fillRect(CX-RW/2,0,RW,H);sc2x.fillRect(0,CY-RW/2,W,RW);
-  sc2x.setLineDash([10,8]);sc2x.strokeStyle='rgba(255,255,200,0.2)';sc2x.lineWidth=1.5;
-  sc2x.beginPath();sc2x.moveTo(CX,0);sc2x.lineTo(CX,CY-RW/2);sc2x.stroke();
-  sc2x.beginPath();sc2x.moveTo(CX,CY+RW/2);sc2x.lineTo(CX,H);sc2x.stroke();
-  sc2x.beginPath();sc2x.moveTo(0,CY);sc2x.lineTo(CX-RW/2,CY);sc2x.stroke();
-  sc2x.beginPath();sc2x.moveTo(CX+RW/2,CY);sc2x.lineTo(W,CY);sc2x.stroke();
-  sc2x.setLineDash([]);
-  sc2x.fillStyle='#2a2a28';sc2x.fillRect(CX-RW/2,CY-RW/2,RW,RW);
-  // Traffic light boxes
-  function drawL(x,y,rot,lights){
-    sc2x.save();sc2x.translate(x,y);sc2x.rotate(rot);
-    sc2x.fillStyle='#111';roundRect(sc2x,-6,-17,12,34,3);sc2x.fill();
-    [[0,lights[2],'#22c55e'],[1,lights[1],'#f59e0b'],[2,lights[0],'#ef4444']].forEach(([i,on,col])=>{
-      sc2x.beginPath();sc2x.arc(0,-11+i*11,4,0,Math.PI*2);
-      sc2x.fillStyle=on?col:'#222';sc2x.fill();
-      if(on){sc2x.globalAlpha=.2;sc2x.beginPath();sc2x.arc(0,-11+i*11,7,0,Math.PI*2);sc2x.fillStyle=col;sc2x.fill();sc2x.globalAlpha=1;}
-    });sc2x.restore();
-  }
-  drawL(CX-RW/2-12,CY-RW/2-12,0,ns);
-  drawL(CX+RW/2+12,CY+RW/2+12,Math.PI,ns);
-  drawL(CX+RW/2+12,CY-RW/2-12,Math.PI/2,ew);
-  drawL(CX-RW/2-12,CY+RW/2+12,-Math.PI/2,ew);
-  sc2x.font='bold 9px Inter';sc2x.textAlign='center';sc2x.fillStyle='rgba(255,255,255,0.4)';
-  sc2x.fillText('N',CX,12);sc2x.fillText('S',CX,H-4);
-  sc2x.fillText('W',8,CY+4);sc2x.fillText('E',W-8,CY+4);
-}
-function tickSimple(now){
-  const dt=Math.min(now-sl,200);se+=dt;sl=now;
-  if(se>=SIMPLE_PHASES[sp].dur){se=0;sp=(sp+1)%6;}
-  drawSimple();
-  const pct=Math.max(0,1-(se/SIMPLE_PHASES[sp].dur));
-  const bar=document.getElementById('simpleBar');
-  if(bar){bar.style.width=(pct*100)+'%';bar.style.background=SIMPLE_PHASES[sp].bar;}
-  const lbl=document.getElementById('simplePhaseLabel');
-  if(lbl){lbl.textContent=SIMPLE_PHASES[sp].name;
-    lbl.style.color=SIMPLE_PHASES[sp].bar==='#22c55e'?'var(--green)':SIMPLE_PHASES[sp].bar==='#4f8ef7'?'var(--accent)':'var(--amber)';}
-  requestAnimationFrame(tickSimple);
-}
-function simpleReset(){sp=0;se=0;sl=performance.now();}
-requestAnimationFrame(tickSimple);
-</script>
-<style>
-.solution-banner{padding:10px 14px;border-radius:8px;font-size:12.5px;margin-bottom:12px;}
-.solution-banner code{background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;}
-.solution-banner.simple{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
-.solution-banner.advanced{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.25);color:var(--accent);}
-</style>
+<script src="js/experiments/exp04-sim.js"></script>
 </body>
 </html>
 
