@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Exp 08 — DC Motor Control | IoT Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp07.html">← Exp 07</a>
+  <div class="nav-exp-id">Exp 08 / 10</div>
+  <a href="exp09.html">Exp 09 →</a>
+</nav>
+<header class="exp-header">
+  <div class="exp-badge">Experiment 08</div>
+  <h1>Spinning a DC Motor &<br>Motor Speed Control</h1>
+  <p class="exp-subtitle">Control DC motor speed and direction with L298N H-bridge. Pot-based speed control, soft-start ramping, and debounced direction toggle.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 L298N · H-Bridge · PWM · Debounce</span>
+    <span class="meta-pill diff-intermediate">Intermediate</span>
+    <span class="meta-pill">ENA=Pin9 · IN1=5 · IN2=6</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+<section class="section">
+  <h2 class="section-title">🔌 L298N H-Bridge Circuit</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#f97316">
+      <div class="info-card-title">⚡ L298N Connections</div>
+      <ul class="info-list">
+        <li>IN1 → Pin 5 (direction A)</li>
+        <li>IN2 → Pin 6 (direction B)</li>
+        <li>ENA → Pin 9 (PWM speed)</li>
+        <li>12V → External 9–12V supply</li>
+        <li>GND → L298N GND + Arduino GND</li>
+        <li>OUT1/OUT2 → Motor terminals</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">🔄 Direction Logic</div>
+      <ul class="info-list">
+        <li>FORWARD: IN1=HIGH, IN2=LOW</li>
+        <li>REVERSE: IN1=LOW, IN2=HIGH</li>
+        <li>BRAKE: IN1=HIGH, IN2=HIGH</li>
+        <li>COAST: IN1=LOW, IN2=LOW</li>
+        <li>Speed: analogWrite(ENA, 0–255)</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">🛡️ Safety Rules</div>
+      <ul class="info-list">
+        <li>Brief BRAKE before reversing direction</li>
+        <li>Link L298N GND to Arduino GND!</li>
+        <li>Dead-band: &lt;10% PWM → stop cleanly</li>
+        <li>Soft-start ramp: ±3 per loop iteration</li>
+        <li>Debounce button 50ms before acting</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution — Basic DC Motor Speed Control</h2>
+  <div class="solution-banner simple">⭐ Start Here — spin motor forward, then reverse. Fixed speed, no potentiometer or buttons needed.</div>
+  <!-- Simple Sim -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:180px;text-align:center">
+        <canvas id="sim8Motor" width="160" height="160" style="border-radius:8px;background:#0c111d"></canvas>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Current State</div>
+        <div id="sim8State" style="font-size:15px;font-weight:600;color:var(--green);margin-bottom:8px">FORWARD (PWM: 128)</div>
+        <div class="timer-bar-wrap" style="height:6px;background:var(--bg2)"><div class="timer-bar" id="sim8Bar" style="height:100%;width:0%;background:var(--green)"></div></div>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <span style="font-size:11px;color:var(--text3)">Simulates basic <code>delay()</code> sequential motor control</span>
+    </div>
+  </div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">simple.ino — Exp 08 (Beginner)</span><button class="copy-btn" onclick="copyCode('code08s')">Copy</button></div>
+    <pre class="code-block" id="code08s"><span class="cm">// Simple DC Motor Control with L298N
+// IN1=5, IN2=6, ENA=9(PWM)</span>
+
+<span class="ck">const int</span> IN1=5, IN2=6, ENA=9;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(ENA, OUTPUT);
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="cm">// Forward at half speed (PWM = 128 / 255)</span>
+  digitalWrite(IN1, HIGH); digitalWrite(IN2, LOW);
+  analogWrite(ENA, <span class="cn">128</span>);
+  delay(<span class="cn">3000</span>);
+
+  <span class="cm">// Stop</span>
+  analogWrite(ENA, <span class="cn">0</span>);
+  delay(<span class="cn">500</span>);
+
+  <span class="cm">// Reverse at full speed (PWM = 255)</span>
+  digitalWrite(IN1, LOW); digitalWrite(IN2, HIGH);
+  analogWrite(ENA, <span class="cn">255</span>);
+  delay(<span class="cn">3000</span>);
+
+  <span class="cm">// Stop</span>
+  analogWrite(ENA, <span class="cn">0</span>);
+  delay(<span class="cn">500</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔄 Motor Control Simulator</h2>
+  <div class="sim-frame">
+    <div style="padding:20px 16px">
+      <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+        <canvas id="motorCanvas" width="180" height="180" style="flex-shrink:0;border-radius:8px;background:#0c111d"></canvas>
+        <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px">Speed (Potentiometer → PWM)</div>
+            <input type="range" id="speedSlider" min="0" max="255" value="128" style="width:100%" oninput="updateMotor()">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:2px"><span>0</span><span>128 (50%)</span><span>255 (100%)</span></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+            <button class="sim-btn" onclick="toggleDir()">⇄ Toggle Direction</button>
+            <button class="sim-btn" onclick="brakeMotor()">⏹ Brake</button>
+            <span id="dirLabel" style="font-size:13px;font-weight:600;color:var(--green)">↻ FORWARD</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div class="stat-item"><div class="stat-num" id="pwmDisplay">128</div><div class="stat-lbl">PWM /255</div></div>
+            <div class="stat-item"><div class="stat-num" id="pctDisplay">50%</div><div class="stat-lbl">Duty Cycle</div></div>
+            <div class="stat-item"><div class="stat-num" id="rpmDisplay">~75</div><div class="stat-lbl">Est. RPM</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);display:flex;gap:16px;flex-wrap:wrap">
+            <span>IN1=<span id="in1" style="color:var(--accent);font-family:JetBrains Mono,monospace">HIGH</span></span>
+            <span>IN2=<span id="in2" style="color:var(--text3);font-family:JetBrains Mono,monospace">LOW</span></span>
+            <span>ENA=<span id="ena" style="color:var(--green);font-family:JetBrains Mono,monospace">128</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">💾 Advanced Solution — Pot Speed + Soft-Start + Debounced Button</h2>
+  <div class="solution-banner advanced">🚀 Advanced — potentiometer speed control, soft-start ramp, debounced direction toggle button.</div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">program.ino — Exp 08</span><button class="copy-btn" onclick="copyCode('code08')">Copy</button></div>
+    <pre class="code-block" id="code08"><span class="cm">// Exp 08 — DC Motor Speed & Direction Control
+// L298N: IN1=5, IN2=6, ENA=9(PWM)
+// Pot=A0, Direction button=2 (INPUT_PULLUP)</span>
+
+<span class="ck">const int</span> IN1=5, IN2=6, ENA=9, POT=A0, BTN=2;
+
+<span class="ck">bool</span> motorForward=<span class="cn">true</span>;
+<span class="ck">bool</span> lastBtnState=HIGH;
+<span class="ck">int</span>  currentPWM=0;
+
+<span class="ck">void</span> <span class="cf">setDirection</span>(<span class="ck">bool</span> fwd){
+  digitalWrite(IN1, fwd?HIGH:LOW);
+  digitalWrite(IN2, fwd?LOW:HIGH);
+}
+
+<span class="cm">// Soft-start: ramp ±3 per call</span>
+<span class="ck">void</span> <span class="cf">rampTo</span>(<span class="ck">int</span> target){
+  <span class="ck">if</span>(currentPWM&lt;target) currentPWM=min(currentPWM+3,target);
+  <span class="ck">else if</span>(currentPWM&gt;target) currentPWM=max(currentPWM-3,target);
+  analogWrite(ENA, currentPWM);
+}
+
+<span class="ck">void</span> <span class="cf">brakeMotor</span>(){
+  digitalWrite(IN1,HIGH); digitalWrite(IN2,HIGH);
+  analogWrite(ENA,0); currentPWM=0;
+}
+
+<span class="cm">// Debounced direction toggle</span>
+<span class="ck">void</span> <span class="cf">checkButton</span>(){
+  <span class="ck">bool</span> btnNow=digitalRead(BTN);
+  <span class="ck">if</span>(lastBtnState==HIGH&amp;&amp;btnNow==LOW){
+    delay(<span class="cn">50</span>);
+    <span class="ck">if</span>(digitalRead(BTN)==LOW){
+      brakeMotor(); delay(<span class="cn">200</span>);
+      motorForward=!motorForward;
+      setDirection(motorForward);
+      Serial.println(motorForward?F(<span class="cs">"→ FORWARD"</span>):F(<span class="cs">"← REVERSE"</span>));
+    }
+  }
+  lastBtnState=btnNow;
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">9600</span>);
+  pinMode(IN1,OUTPUT); pinMode(IN2,OUTPUT);
+  pinMode(ENA,OUTPUT); pinMode(BTN,INPUT_PULLUP);
+  brakeMotor(); setDirection(<span class="cn">true</span>);
+  Serial.println(F(<span class="cs">"=== DC Motor Control ==="</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  <span class="ck">int</span> potVal=analogRead(POT);
+  <span class="ck">int</span> target=map(potVal,<span class="cn">0</span>,<span class="cn">1023</span>,<span class="cn">0</span>,<span class="cn">255</span>);
+  <span class="ck">if</span>(target&lt;25) target=0; <span class="cm">// dead-band &lt;10%</span>
+  rampTo(target);
+  <span class="ck">if</span>(target&gt;0) setDirection(motorForward);
+  checkButton();
+  delay(<span class="cn">20</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📊 Program Flowchart</h2>
+  <div class="flowchart">
+    <div class="fc-start">START — setup()</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">brakeMotor() · setDirection(FORWARD) · Serial init</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-loop-label">loop() — every 20ms</div>
+    <div class="fc-loop-body">
+      <div class="fc-box">Read Pot → map(0–1023, 0–255) → target PWM</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-diamond">target &lt; 25? (dead-band)</div>
+      <div class="fc-branch">
+        <div class="fc-branch-yes"><div class="fc-mini" style="color:var(--red)">YES</div><div class="fc-box-sm">target = 0<br>(clean stop)</div></div>
+        <div class="fc-branch-no"><div class="fc-mini" style="color:var(--green)">NO</div><div class="fc-box-sm">rampTo(target)<br>setDirection()</div></div>
+      </div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box">checkButton() — debounce + direction toggle</div>
+    </div>
+    <div class="fc-arrow-back">↑ repeat</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📝 Notes & Extras</h2>
+  <div class="notes-grid">
+    <div class="note-card note-info">
+      <div class="note-title">💡 H-Bridge Explained</div>
+      <div class="note-body">An H-Bridge has 4 switches (transistors) arranged like the letter H. By closing different switch pairs, current flows through the motor in either direction. L298N contains two H-bridges (Channel A + B), allowing control of 2 motors or 1 stepper motor simultaneously.</div>
+    </div>
+    <div class="note-card note-warn">
+      <div class="note-title">⚠️ Shared GND is Critical</div>
+      <div class="note-body">The external motor supply (9–12V) and Arduino must share a common GND. Without a common ground, the control signals from Arduino pins have no reference point and the L298N won't respond correctly. <strong>Always link GNDs before powering up.</strong></div>
+    </div>
+    <div class="note-card note-tip">
+      <div class="note-title">🔧 Soft-Start Ramping</div>
+      <div class="note-body">Jumping directly to full PWM causes high inrush current that stresses motor windings and can reset Arduino. <code>rampTo()</code> increments by 3 each loop (every 20ms) — reaching full speed in ~1.7 seconds. This protects the motor and ensures smooth acceleration.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">🔘 Button Debounce</div>
+      <div class="note-body">Mechanical buttons bounce 5–50ms when pressed. Without debounce, one press registers 10–20 events. Solution: detect falling edge (HIGH→LOW), then <code>delay(50ms)</code>, then re-check if still LOW. Only then act. This is called <strong>software debounce</strong>.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔧 Key Functions</h2>
+  <div class="func-list">
+    <div class="func-item"><code class="func-sig">analogWrite(ENA, 0–255)</code><div class="func-desc">PWM on Enable pin controls motor speed. 0=stopped, 255=full speed. Works on PWM-capable pins only (D3,D5,D6,D9,D10,D11).</div></div>
+    <div class="func-item"><code class="func-sig">rampTo(target)</code><div class="func-desc">Custom soft-start: gradually changes currentPWM toward target by ±3 each call. Prevents current spikes and mechanical stress.</div></div>
+    <div class="func-item"><code class="func-sig">brakeMotor()</code><div class="func-desc">Sets IN1=IN2=HIGH and ENA=0. Shorts motor terminals — creates electromagnetic braking (fast stop). Call before direction reversal.</div></div>
+    <div class="func-item"><code class="func-sig">checkButton()</code><div class="func-desc">Edge-detect + debounce pattern: detect HIGH→LOW transition, wait 50ms, verify still LOW, then toggle direction with a brake buffer.</div></div>
+    <div class="func-item"><code class="func-sig">map(val, iMin, iMax, oMin, oMax)</code><div class="func-desc">Scale pot reading 0–1023 to PWM 0–255. Then apply dead-band: values below 10% (25/255) become 0 for clean motor stop.</div></div>
+  </div>
+</section>
+
+</main>
+<footer class="exp-footer">
+  <a href="exp07.html">← Exp 07</a>
+  <span>Exp 08 of 10 · DC Motor</span>
+  <a href="exp09.html">Exp 09 →</a>
+</footer>
+<script src="shared.js"></script>
+<script>
+const mc = document.getElementById('motorCanvas');
+const {ctx:mctx,W:mcW,H:mcH} = hiDPI(mc);
+let motorAngle = 0, motorSpeed = 0, motorDir = 1, braked = false;
+let animFrame;
+
+function drawMotor(){
+  const W=mcW,H=mcH,cx=W/2,cy=H/2;
+  mctx.clearRect(0,0,W,H);
+  mctx.fillStyle='#0c111d';mctx.fillRect(0,0,W,H);
+  // Outer casing
+  mctx.strokeStyle='rgba(249,115,22,0.3)';mctx.lineWidth=8;
+  mctx.beginPath();mctx.arc(cx,cy,70,0,Math.PI*2);mctx.stroke();
+  // Rotor
+  mctx.save();mctx.translate(cx,cy);mctx.rotate(motorAngle*Math.PI/180);
+  for(let i=0;i<6;i++){
+    const a=i*60*Math.PI/180;
+    mctx.strokeStyle=`rgba(249,115,22,${0.4+0.1*i})`;mctx.lineWidth=3;
+    mctx.beginPath();mctx.moveTo(0,0);mctx.lineTo(Math.cos(a)*55,Math.sin(a)*55);mctx.stroke();
+    mctx.fillStyle='rgba(249,115,22,0.6)';
+    mctx.beginPath();mctx.arc(Math.cos(a)*55,Math.sin(a)*55,5,0,Math.PI*2);mctx.fill();
+  }
+  mctx.restore();
+  // Center
+  mctx.fillStyle='#f97316';mctx.beginPath();mctx.arc(cx,cy,10,0,Math.PI*2);mctx.fill();
+  // Speed arc
+  const pct=motorSpeed/255;
+  mctx.strokeStyle=braked?'#ef4444':pct>0?'#f97316':'rgba(255,255,255,0.1)';
+  mctx.lineWidth=4;mctx.beginPath();
+  mctx.arc(cx,cy,78,-Math.PI/2,-Math.PI/2+pct*Math.PI*2);mctx.stroke();
+  // Direction arrow
+  if(motorSpeed>5){
+    mctx.fillStyle='rgba(249,115,22,0.7)';mctx.font='14px Inter,sans-serif';mctx.textAlign='center';
+    mctx.fillText(motorDir>0?'↻':'↺',cx,cy+46);
+  }
+}
+
+function animate(){
+  if(!braked && motorSpeed>0){
+    motorAngle=(motorAngle+motorSpeed*motorDir*0.08)%360;
+  }
+  drawMotor();
+  animFrame=requestAnimationFrame(animate);
+}
+
+function updateMotor(){
+  braked=false;
+  const val=+document.getElementById('speedSlider').value;
+  motorSpeed=val<25?0:val;
+  const pct=Math.round((motorSpeed/255)*100);
+  document.getElementById('pwmDisplay').textContent=motorSpeed;
+  document.getElementById('pctDisplay').textContent=pct+'%';
+  document.getElementById('rpmDisplay').textContent='~'+Math.round(pct*1.5);
+  document.getElementById('in1').textContent=motorDir>0?'HIGH':'LOW';
+  document.getElementById('in2').textContent=motorDir>0?'LOW':'HIGH';
+  document.getElementById('ena').textContent=motorSpeed;
+}
+
+function toggleDir(){
+  motorDir*=-1;
+  motorSpeed=0;
+  document.getElementById('dirLabel').textContent=motorDir>0?'↻ FORWARD':'↺ REVERSE';
+  document.getElementById('dirLabel').style.color=motorDir>0?'var(--green)':'var(--amber)';
+  updateMotor();
+}
+
+function brakeMotor(){
+  braked=true; motorSpeed=0;
+  document.getElementById('speedSlider').value=0;
+  updateMotor();
+}
+
+animate();
+updateMotor();
+
+// ── Simple Sim Logic ──
+(function(){
+  const cv = document.getElementById('sim8Motor');
+  if(!cv) return;
+  const ctx = hiDPI(cv).ctx;
+  const W=160, H=160;
+  
+  const states = [
+    {n:'FORWARD (128)', d:3000, spd:4, dir:1, c:'var(--green)'},
+    {n:'STOP (0)', d:500, spd:0, dir:0, c:'var(--text2)'},
+    {n:'REVERSE (255)', d:3000, spd:8, dir:-1, c:'var(--red)'},
+    {n:'STOP (0)', d:500, spd:0, dir:0, c:'var(--text2)'}
+  ];
+  let sIdx = 0;
+  let angle = 0;
+  let sTime = performance.now();
+  
+  function drawSim8(){
+    const now = performance.now();
+    const st = states[sIdx];
+    let elapsed = now - sTime;
+    if(elapsed >= st.d){
+      elapsed = 0; sTime = now;
+      sIdx = (sIdx+1)%states.length;
+      document.getElementById('sim8State').textContent = states[sIdx].n;
+      document.getElementById('sim8State').style.color = states[sIdx].c;
+      document.getElementById('sim8Bar').style.background = states[sIdx].c;
+    }
+    document.getElementById('sim8Bar').style.width = Math.max(0,100*(1 - elapsed/states[sIdx].d)) + '%';
+    
+    angle += st.spd * st.dir;
+    ctx.fillStyle='#0c111d'; ctx.fillRect(0,0,W,H);
+    const cx=W/2, cy=H/2;
+    ctx.fillStyle='#2C2C2A'; ctx.beginPath(); ctx.arc(cx,cy,40,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#4f8ef7'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(cx,cy,40,0,Math.PI*2); ctx.stroke();
+    
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(angle*Math.PI/180);
+    ctx.fillStyle='#d4d4d4'; ctx.fillRect(-5,-20,10,40);
+    ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(0,-15,4,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    
+    requestAnimationFrame(drawSim8);
+  }
+  requestAnimationFrame(drawSim8);
+})();
+</script>
+<style>
+</style>
+</body>
+</html>

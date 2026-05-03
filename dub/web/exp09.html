@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Exp 09 — Working with Shields | IoT Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp08.html">← Exp 08</a>
+  <div class="nav-exp-id">Exp 09 / 10</div>
+  <a href="exp10.html">Exp 10 →</a>
+</nav>
+<header class="exp-header">
+  <div class="exp-badge">Experiment 09</div>
+  <h1>Working with<br>Arduino Shields</h1>
+  <p class="exp-subtitle">Stack an Ethernet Shield (W5100) to create an HTTP web server serving live sensor data to any browser on the local network via DHCP.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 W5100 · SPI · HTTP · DHCP · Web Server</span>
+    <span class="meta-pill diff-advanced">Advanced</span>
+    <span class="meta-pill">Reserved: Pins 10–13</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+<section class="section">
+  <h2 class="section-title">📚 Shield Stacking Concept</h2>
+  <div class="flow-diagram">
+    <div class="flow-node" style="--nc:#6366f1">
+      <div class="fn-title">Ethernet Shield (W5100)</div>
+      <div class="fn-desc">Top layer<br>Adds TCP/IP stack in hardware<br>Communicates via SPI (pins 10–13)</div>
+    </div>
+    <div class="flow-arrow">↑ stacked on</div>
+    <div class="flow-node" style="--nc:#22c55e">
+      <div class="fn-title">Arduino UNO</div>
+      <div class="fn-desc">Base board<br>Runs your sketch<br>Passes-through all pin headers</div>
+    </div>
+    <div class="flow-arrow">↑ connected via</div>
+    <div class="flow-node" style="--nc:#f59e0b">
+      <div class="fn-title">RJ45 → Router</div>
+      <div class="fn-desc">Ethernet cable<br>DHCP gets IP from router<br>Any device on LAN can access</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔌 Reserved Pins Warning</h2>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Pin</th><th>SPI Function</th><th>Status with Ethernet Shield</th></tr></thead>
+      <tbody>
+        <tr><td><code>10</code></td><td>SS (Slave Select)</td><td style="color:var(--red)">⛔ RESERVED — W5100 chip select</td></tr>
+        <tr><td><code>11</code></td><td>MOSI</td><td style="color:var(--red)">⛔ RESERVED — SPI data to W5100</td></tr>
+        <tr><td><code>12</code></td><td>MISO</td><td style="color:var(--red)">⛔ RESERVED — SPI data from W5100</td></tr>
+        <tr><td><code>13</code></td><td>SCK (Clock)</td><td style="color:var(--red)">⛔ RESERVED — SPI clock</td></tr>
+        <tr><td><code>4</code></td><td>SD Card CS</td><td style="color:var(--amber)">⚠️ RESERVED if using onboard SD</td></tr>
+        <tr><td>2, 3, 5–9, A0–A5</td><td>—</td><td style="color:var(--green)">✅ Available for your sensors</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🌐 HTTP Protocol Flow</h2>
+  <div class="flowchart">
+    <div class="fc-box" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.3);color:var(--purple)">Browser types IP address → sends HTTP GET / request</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">Ethernet Shield receives TCP packet → hands to <code>server.available()</code></div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">Arduino reads HTTP headers → parses URL for <code>/led=on</code> or <code>/led=off</code></div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">Read DHT11 temp/humidity + LDR light level</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">Send HTTP/1.1 200 OK + HTML dashboard page</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.3);color:var(--purple)">client.stop() → browser renders page → auto-refreshes in 10s</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution — Basic Ethernet Web Server</h2>
+  <div class="solution-banner simple">⭐ Start Here — serve a plain-text response. No sensors, no HTML styling needed. Just verify the shield works.</div>
+  <!-- Simple Sim -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px">
+      <div style="display:flex;align-items:center;background:#2C2C2A;padding:8px;border-radius:6px 6px 0 0;gap:8px">
+        <div style="display:flex;gap:4px">
+          <div style="width:10px;height:10px;border-radius:50%;background:#ef4444"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#22c55e"></div>
+        </div>
+        <input type="text" value="http://192.168.1.100/" disabled style="background:#1a1a1a;border:1px solid #333;color:#888;font-size:11px;padding:4px 8px;border-radius:4px;flex:1">
+        <button class="sim-btn" style="padding:4px 8px;font-size:11px" onclick="sim9Refresh()">↻ Refresh</button>
+      </div>
+      <div id="sim9Browser" style="background:#fff;color:#000;padding:16px;min-height:100px;border-radius:0 0 6px 6px;font-family:Arial,sans-serif;font-size:14px">
+        Click Refresh to request page from Arduino...
+      </div>
+    </div>
+    <div class="sim-controls">
+      <span style="font-size:11px;color:var(--text3)">Simulates a web browser making an HTTP GET request</span>
+    </div>
+  </div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">simple.ino — Exp 09 (Beginner)</span><button class="copy-btn" onclick="copyCode('code09s')">Copy</button></div>
+    <pre class="code-block" id="code09s"><span class="cm">// Simple Ethernet Web Server
+// W5100 shield: Pins 10-13 reserved for SPI</span>
+
+<span class="cp">#include</span> &lt;Ethernet.h&gt;
+
+byte mac[] = { <span class="cn">0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED</span> };
+EthernetServer server(<span class="cn">80</span>);
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);
+  Ethernet.begin(mac);    <span class="cm">// Get IP from router via DHCP</span>
+  server.begin();
+  Serial.print(<span class="cs">&quot;Server IP: &quot;</span>);
+  Serial.println(Ethernet.localIP());
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  EthernetClient client = server.available();
+  <span class="ck">if</span>(client) {
+    <span class="cm">// Wait for blank line (end of HTTP request)</span>
+    <span class="ck">while</span>(client.connected()) {
+      <span class="ck">if</span>(client.available()) {
+        <span class="ck">char</span> c = client.read();
+        <span class="ck">if</span>(c == <span class="cs">&apos;\n&apos;</span>) <span class="ck">break</span>;
+      }
+    }
+    <span class="cm">// Send simple HTTP response</span>
+    client.println(<span class="cs">&quot;HTTP/1.1 200 OK&quot;</span>);
+    client.println(<span class="cs">&quot;Content-Type: text/plain&quot;</span>);
+    client.println();
+    client.println(<span class="cs">&quot;Hello from Arduino!&quot;</span>);
+    client.println(<span class="cs">&quot;Uptime: &quot;</span>);
+    client.print(millis() / 1000);
+    client.println(<span class="cs">&quot; seconds&quot;</span>);
+    client.stop();
+  }
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🌐 Web Dashboard Preview</h2>
+  <div style="background:#1a1a2e;border-radius:12px;padding:20px;border:1px solid var(--border)">
+    <div style="color:#00d4ff;font-size:20px;font-weight:700;margin-bottom:12px">📡 Arduino Sensor Dashboard</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px">
+      <div style="background:#16213e;border-radius:10px;padding:14px;border-left:4px solid #00d4ff">
+        <div style="font-size:11px;color:#aaa;margin-bottom:4px">🌡️ Temperature</div>
+        <div style="font-size:28px;font-weight:700;color:#00d4ff" id="demoTemp">--</div>
+        <div style="font-size:11px;color:#888">°C</div>
+      </div>
+      <div style="background:#16213e;border-radius:10px;padding:14px;border-left:4px solid #00d4ff">
+        <div style="font-size:11px;color:#aaa;margin-bottom:4px">💧 Humidity</div>
+        <div style="font-size:28px;font-weight:700;color:#00d4ff" id="demoHum">--</div>
+        <div style="font-size:11px;color:#888">%</div>
+      </div>
+      <div style="background:#16213e;border-radius:10px;padding:14px;border-left:4px solid #00d4ff">
+        <div style="font-size:11px;color:#aaa;margin-bottom:4px">☀️ Light Level</div>
+        <div style="font-size:28px;font-weight:700;color:#00d4ff" id="demoLDR">--</div>
+        <div style="font-size:11px;color:#888">/ 1023</div>
+      </div>
+      <div style="background:#16213e;border-radius:10px;padding:14px;border-left:4px solid #00d4ff">
+        <div style="font-size:11px;color:#aaa;margin-bottom:4px">⏱️ Uptime</div>
+        <div style="font-size:28px;font-weight:700;color:#00d4ff" id="demoUptime">0</div>
+        <div style="font-size:11px;color:#888">seconds</div>
+      </div>
+    </div>
+    <div style="background:#16213e;border-radius:10px;padding:14px;border-left:4px solid #27ae60;margin-top:10px">
+      <div style="font-size:11px;color:#aaa;margin-bottom:8px">💡 LED Control (Pin 7)</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="setLED(true)" style="padding:8px 16px;border-radius:7px;border:none;background:#27ae60;color:#fff;cursor:pointer;font-family:Inter,sans-serif;font-weight:600">Turn ON</button>
+        <button onclick="setLED(false)" style="padding:8px 16px;border-radius:7px;border:none;background:#c0392b;color:#fff;cursor:pointer;font-family:Inter,sans-serif;font-weight:600">Turn OFF</button>
+        <span style="font-size:12px;color:#888;align-self:center">State: <strong id="ledStateDemo" style="color:#27ae60">OFF</strong></span>
+      </div>
+    </div>
+    <div style="font-size:10px;color:#555;margin-top:8px;text-align:center">Simulated dashboard — actual page auto-refreshes every 10 seconds from Arduino</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">💾 Advanced Solution — HTML Dashboard + Sensor Data + LED Control</h2>
+  <div class="solution-banner advanced">🚀 Advanced — full HTML page, live DHT11 + LDR readings, LED on/off via URL, auto-refresh.</div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">program.ino — Exp 09</span><button class="copy-btn" onclick="copyCode('code09')">Copy</button></div>
+    <pre class="code-block" id="code09"><span class="cp">#include</span> &lt;Ethernet.h&gt;
+<span class="cp">#include</span> &lt;DHT.h&gt;
+
+byte mac[]={0xDE,0xAD,0xBE,0xEF,0xFE,0xED};
+EthernetServer server(<span class="cn">80</span>);
+
+<span class="cp">#define</span> DHT_PIN 3
+<span class="cp">#define</span> DHTTYPE DHT11
+DHT dht(DHT_PIN,DHTTYPE);
+
+<span class="ck">const int</span> LDR_PIN=A0, LED_PIN=7;
+<span class="ck">bool</span> ledState=<span class="cn">false</span>;
+
+<span class="ck">void</span> <span class="cf">sendHeaders</span>(EthernetClient&amp; c){
+  c.println(F(<span class="cs">"HTTP/1.1 200 OK"</span>));
+  c.println(F(<span class="cs">"Content-Type: text/html"</span>));
+  c.println(F(<span class="cs">"Connection: close"</span>));
+  c.println(); <span class="cm">// Blank line = end of headers</span>
+}
+
+<span class="ck">void</span> <span class="cf">sendDashboard</span>(EthernetClient&amp; c,<span class="ck">float</span> t,<span class="ck">float</span> h,<span class="ck">int</span> ldr){
+  c.println(F(<span class="cs">"&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;"</span>));
+  c.println(F(<span class="cs">"&lt;meta http-equiv='refresh' content='10'&gt;"</span>));
+  c.println(F(<span class="cs">"&lt;title&gt;Arduino Dashboard&lt;/title&gt;"</span>));
+  c.println(F(<span class="cs">"&lt;style&gt;body{font-family:Arial;background:#1a1a2e;color:#eee;}"</span>));
+  c.println(F(<span class="cs">".card{background:#16213e;border-radius:12px;padding:20px;margin:12px 0;"</span>));
+  c.println(F(<span class="cs">"border-left:4px solid #00d4ff;}&lt;/style&gt;&lt;/head&gt;&lt;body&gt;"</span>));
+  c.println(F(<span class="cs">"&lt;h1 style='color:#00d4ff'&gt;Arduino Dashboard&lt;/h1&gt;"</span>));
+  c.print(F(<span class="cs">"&lt;div class='card'&gt;Temperature: &lt;b&gt;"</span>));
+  isnan(t)?c.print(F(<span class="cs">"--"</span>)):c.print(t,1); c.println(F(<span class="cs">" C&lt;/b&gt;&lt;/div&gt;"</span>));
+  c.print(F(<span class="cs">"&lt;div class='card'&gt;Humidity: &lt;b&gt;"</span>));
+  isnan(h)?c.print(F(<span class="cs">"--"</span>)):c.print(h,1); c.println(F(<span class="cs">" %&lt;/b&gt;&lt;/div&gt;"</span>));
+  c.print(F(<span class="cs">"&lt;div class='card'&gt;Light: &lt;b&gt;"</span>));
+  c.print(ldr); c.println(F(<span class="cs">" /1023&lt;/b&gt;&lt;/div&gt;"</span>));
+  c.print(F(<span class="cs">"&lt;div class='card'&gt;Uptime: &lt;b&gt;"</span>));
+  c.print(millis()/1000); c.println(F(<span class="cs">" s&lt;/b&gt;&lt;/div&gt;"</span>));
+  c.println(F(<span class="cs">"&lt;a href='/led=on'&gt;LED ON&lt;/a&gt; &lt;a href='/led=off'&gt;LED OFF&lt;/a&gt;"</span>));
+  c.println(F(<span class="cs">"&lt;/body&gt;&lt;/html&gt;"</span>));
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">9600</span>); dht.begin();
+  pinMode(LED_PIN,OUTPUT); digitalWrite(LED_PIN,LOW);
+  <span class="ck">if</span>(Ethernet.begin(mac)==0){
+    Serial.println(F(<span class="cs">"DHCP FAILED! Check cable."</span>)); <span class="ck">while</span>(true);
+  }
+  delay(<span class="cn">1000</span>); server.begin();
+  Serial.print(F(<span class="cs">"Server at http://"</span>)); Serial.println(Ethernet.localIP());
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  Ethernet.maintain();
+  EthernetClient client=server.available();
+  <span class="ck">if</span>(!client)return;
+  String req=<span class="cs">""</span>;
+  <span class="ck">unsigned long</span> timeout=millis()+1000;
+  <span class="ck">bool</span> blank=true;
+  <span class="ck">while</span>(client.connected()&amp;&amp;millis()&lt;timeout){
+    <span class="ck">if</span>(client.available()){
+      <span class="ck">char</span> c=client.read();
+      req+=c;
+      <span class="ck">if</span>(c=='\n'&amp;&amp;blank)break;
+      blank=(c=='\n')?true:(c=='\r'?blank:false);
+    }
+  }
+  <span class="ck">if</span>(req.indexOf(<span class="cs">"led=on"</span>)&gt;=0){ledState=true;digitalWrite(LED_PIN,HIGH);}
+  <span class="ck">else if</span>(req.indexOf(<span class="cs">"led=off"</span>)&gt;=0){ledState=false;digitalWrite(LED_PIN,LOW);}
+  sendHeaders(client);
+  sendDashboard(client,dht.readTemperature(),dht.readHumidity(),analogRead(LDR_PIN));
+  delay(<span class="cn">1</span>); client.stop();
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📝 Notes & Extras</h2>
+  <div class="notes-grid">
+    <div class="note-card note-info">
+      <div class="note-title">💡 W5100 TCP/IP in Hardware</div>
+      <div class="note-body">The W5100 chip implements the full TCP/IP network stack <strong>in hardware silicon</strong>. This offloads all packet assembly, checksums, and retransmission from the Arduino CPU. The ATmega328P only needs to send/receive raw data over SPI — the W5100 handles everything else.</div>
+    </div>
+    <div class="note-card note-warn">
+      <div class="note-title">⚠️ DHCP vs Static IP</div>
+      <div class="note-body"><code>Ethernet.begin(mac)</code> with just the MAC uses DHCP — router assigns IP automatically. Open Serial Monitor after upload to see the assigned IP. For permanent installations, use <code>Ethernet.begin(mac, staticIP)</code> so the address never changes.</div>
+    </div>
+    <div class="note-card note-tip">
+      <div class="note-title">🔧 HTTP Blank Line Rule</div>
+      <div class="note-body">HTTP protocol requires a <strong>blank line</strong> (just \r\n) between headers and body. Without it, browsers won't render the response. The code tracks a <code>blank</code> boolean — when a newline follows a newline, headers are done and we break out of the reading loop.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">🌐 Common Shields Reference</div>
+      <div class="note-body"><strong>Ethernet W5100</strong>: wired internet (pins 10–13)<br><strong>Motor Shield L293D</strong>: 2× DC or 1× stepper<br><strong>GSM Shield</strong>: cellular (D2/D3 software serial)<br><strong>LCD Keypad</strong>: 16×2 display + 5 buttons (A0, 4–8)<br><strong>Relay Shield</strong>: 4× relays (pins 4–7)</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔧 Key Functions</h2>
+  <div class="func-list">
+    <div class="func-item"><code class="func-sig">Ethernet.begin(mac)</code><div class="func-desc">Initialize Ethernet with DHCP. Returns 0 on failure. Call once in setup(). The MAC address must be unique on your LAN.</div></div>
+    <div class="func-item"><code class="func-sig">Ethernet.maintain()</code><div class="func-desc">Must be called in loop() to renew DHCP lease before it expires. Keeps the IP address valid for long-running sketches.</div></div>
+    <div class="func-item"><code class="func-sig">server.available()</code><div class="func-desc">Returns an EthernetClient if a browser has connected. Returns null/falsy if no client. Check at every loop() iteration.</div></div>
+    <div class="func-item"><code class="func-sig">client.println(F("HTTP/1.1 200 OK"))</code><div class="func-desc">Send HTTP response line to connected browser. Use F() macro to store strings in Flash and save SRAM — critical in a web server sketch with many string constants.</div></div>
+    <div class="func-item"><code class="func-sig">client.stop()</code><div class="func-desc">Close the connection after sending the response. HTTP/1.0 requires explicit close. Without this, browser waits for more data and dashboard appears blank.</div></div>
+  </div>
+</section>
+
+</main>
+<footer class="exp-footer">
+  <a href="exp08.html">← Exp 08</a>
+  <span>Exp 09 of 10 · Shields</span>
+  <a href="exp10.html">Exp 10 →</a>
+</footer>
+<script src="shared.js"></script>
+<script>
+// Animate demo dashboard
+let uptime=0, ledOn=false;
+setInterval(()=>{
+  uptime++;
+  document.getElementById('demoUptime').textContent=uptime;
+  document.getElementById('demoTemp').textContent=(22+Math.random()*4).toFixed(1);
+  document.getElementById('demoHum').textContent=Math.round(55+Math.random()*15);
+  document.getElementById('demoLDR').textContent=Math.round(300+Math.random()*400);
+},2000);
+
+function setLED(on){
+  ledOn=on;
+  document.getElementById('ledStateDemo').textContent=on?'ON':'OFF';
+  document.getElementById('ledStateDemo').style.color=on?'#27ae60':'#c0392b';
+}
+
+// ── Simple Sim Logic ──
+let sim9Start = performance.now();
+function sim9Refresh(){
+  const b = document.getElementById('sim9Browser');
+  if(!b) return;
+  b.innerHTML = '<span style="color:#888;font-size:12px">Connecting to 192.168.1.100...</span>';
+  setTimeout(()=>{
+    const uptime = Math.floor((performance.now() - sim9Start)/1000);
+    b.innerHTML = `Hello from Arduino!<br>Uptime: ${uptime} seconds`;
+  }, 400);
+}
+</script>
+<style>
+</style>
+</body>
+</html>

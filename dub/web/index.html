@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arduino IoT Lab — MJ DSE-2P Practicals</title>
+  <meta name="description" content="Comprehensive Arduino IoT Lab covering 10 experiments from board understanding to cloud interfacing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0e1a;
+      --bg2: #111827;
+      --bg3: #1a2235;
+      --border: rgba(255,255,255,0.08);
+      --text: #e8ecf1;
+      --text2: #8b95a8;
+      --accent: #4f8ef7;
+      --accent2: #7c3aed;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --red: #ef4444;
+      --teal: #14b8a6;
+      --pink: #ec4899;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    /* HEADER */
+    header {
+      position: relative;
+      padding: 80px 24px 60px;
+      text-align: center;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(79,142,247,0.18) 0%, transparent 70%),
+                  radial-gradient(ellipse 50% 40% at 80% 30%, rgba(124,58,237,0.12) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(79,142,247,0.12);
+      border: 1px solid rgba(79,142,247,0.3);
+      border-radius: 999px;
+      padding: 5px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      font-weight: 700;
+      background: linear-gradient(135deg, #e8ecf1 0%, #4f8ef7 50%, #7c3aed 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.15;
+      margin-bottom: 16px;
+    }
+    header p {
+      color: var(--text2);
+      font-size: 1.05rem;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+    .header-stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 36px;
+      flex-wrap: wrap;
+    }
+    .hstat {
+      text-align: center;
+    }
+    .hstat-num {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .hstat-lbl {
+      font-size: 11px;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* MAIN GRID */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .exp-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .exp-card {
+      position: relative;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.25s ease;
+      overflow: hidden;
+    }
+    .exp-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .exp-card:hover {
+      border-color: rgba(79,142,247,0.35);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(79,142,247,0.1);
+    }
+    .exp-card:hover::before { opacity: 1; }
+
+    .exp-num {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .exp-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+    .exp-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .exp-info { flex: 1; }
+    .exp-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .exp-desc {
+      font-size: 12.5px;
+      color: var(--text2);
+      line-height: 1.5;
+    }
+    .exp-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .tag {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+    .exp-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .exp-arrow {
+      font-size: 18px;
+      color: var(--text2);
+      transition: transform 0.2s, color 0.2s;
+    }
+    .exp-card:hover .exp-arrow {
+      transform: translateX(4px);
+      color: var(--accent);
+    }
+    .exp-difficulty {
+      font-size: 10px;
+      font-weight: 500;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    .diff-beginner { background: rgba(34,197,94,0.12); color: var(--green); }
+    .diff-intermediate { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .diff-advanced { background: rgba(239,68,68,0.12); color: var(--red); }
+
+    /* Color themes per card */
+    .c1 { background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(79,142,247,0.05)); }
+    .c2 { background: linear-gradient(135deg, rgba(124,58,237,0.15), rgba(124,58,237,0.05)); }
+    .c3 { background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05)); }
+    .c4 { background: linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05)); }
+    .c5 { background: linear-gradient(135deg, rgba(20,184,166,0.15), rgba(20,184,166,0.05)); }
+    .c6 { background: linear-gradient(135deg, rgba(236,72,153,0.15), rgba(236,72,153,0.05)); }
+    .c7 { background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(239,68,68,0.05)); }
+    .c8 { background: linear-gradient(135deg, rgba(249,115,22,0.15), rgba(249,115,22,0.05)); }
+    .c9 { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(99,102,241,0.05)); }
+    .c10 { background: linear-gradient(135deg, rgba(6,182,212,0.15), rgba(6,182,212,0.05)); }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      color: var(--text2);
+      font-size: 12px;
+    }
+
+    @media (max-width: 600px) {
+      header { padding: 48px 16px 40px; }
+      .exp-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-badge">🔬 MJ DSE-2P · IoT Arduino Lab</div>
+  <h1>Arduino IoT<br>Practicals</h1>
+  <p>10 comprehensive experiments from board fundamentals to cloud interfacing — with live simulations, annotated code, flowcharts, and deep-dive notes.</p>
+  <div class="header-stats">
+    <div class="hstat"><div class="hstat-num">10</div><div class="hstat-lbl">Experiments</div></div>
+    <div class="hstat"><div class="hstat-num">01</div><div class="hstat-lbl">Credit</div></div>
+    <div class="hstat"><div class="hstat-num">∞</div><div class="hstat-lbl">Curiosity</div></div>
+  </div>
+</header>
+
+<main>
+  <div class="section-label">All Experiments</div>
+  <div class="exp-grid">
+
+    <a href="exp01.html" class="exp-card">
+      <div class="exp-num">Exp 01</div>
+      <div class="exp-header">
+        <div class="exp-icon c1">🔌</div>
+        <div class="exp-info">
+          <div class="exp-title">Arduino UNO Board & Components</div>
+        </div>
+      </div>
+      <div class="exp-desc">Identify every pin, LED, and chip on the Arduino UNO. Understand ATmega328P specs, PWM pins, ADC, and memory architecture.</div>
+      <div class="exp-tags">
+        <span class="tag">ATmega328P</span>
+        <span class="tag">Pin Map</span>
+        <span class="tag">ADC</span>
+        <span class="tag">PWM</span>
+        <span class="tag">EEPROM</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-beginner">Beginner</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp02.html" class="exp-card">
+      <div class="exp-num">Exp 02</div>
+      <div class="exp-header">
+        <div class="exp-icon c2">💻</div>
+        <div class="exp-info">
+          <div class="exp-title">Installing & Working with Arduino IDE</div>
+        </div>
+      </div>
+      <div class="exp-desc">Set up Arduino IDE 2.x, understand the compilation pipeline, use Serial Monitor/Plotter, and manage libraries.</div>
+      <div class="exp-tags">
+        <span class="tag">IDE 2.x</span>
+        <span class="tag">avr-gcc</span>
+        <span class="tag">avrdude</span>
+        <span class="tag">Serial Monitor</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-beginner">Beginner</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp03.html" class="exp-card">
+      <div class="exp-num">Exp 03</div>
+      <div class="exp-header">
+        <div class="exp-icon c3">💡</div>
+        <div class="exp-info">
+          <div class="exp-title">Blinking LED Sketch</div>
+        </div>
+      </div>
+      <div class="exp-desc">Blink an LED with delay() and non-blocking millis(), then PWM fade. Learn setup/loop structure with a live LED simulator.</div>
+      <div class="exp-tags">
+        <span class="tag">digitalWrite</span>
+        <span class="tag">millis()</span>
+        <span class="tag">PWM</span>
+        <span class="tag">analogWrite</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-beginner">Beginner</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp04.html" class="exp-card">
+      <div class="exp-num">Exp 04</div>
+      <div class="exp-header">
+        <div class="exp-icon c4">🚦</div>
+        <div class="exp-info">
+          <div class="exp-title">4-Way Traffic Light Simulation</div>
+        </div>
+      </div>
+      <div class="exp-desc">Simulate a full 4-way intersection with FSM phases, safety all-red buffers, and an emergency override. Live canvas simulation.</div>
+      <div class="exp-tags">
+        <span class="tag">FSM</span>
+        <span class="tag">Arrays</span>
+        <span class="tag">Helper Functions</span>
+        <span class="tag">Serial</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-intermediate">Intermediate</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp05.html" class="exp-card">
+      <div class="exp-num">Exp 05</div>
+      <div class="exp-header">
+        <div class="exp-icon c5">📡</div>
+        <div class="exp-info">
+          <div class="exp-title">Ultrasonic Sensor Handling</div>
+        </div>
+      </div>
+      <div class="exp-desc">Measure distance with HC-SR04, trigger zone alerts (danger/caution/safe) with LEDs and buzzer. Smoothed multi-sample readings.</div>
+      <div class="exp-tags">
+        <span class="tag">HC-SR04</span>
+        <span class="tag">pulseIn()</span>
+        <span class="tag">Sound Speed</span>
+        <span class="tag">Zones</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-intermediate">Intermediate</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp06.html" class="exp-card">
+      <div class="exp-num">Exp 06</div>
+      <div class="exp-header">
+        <div class="exp-icon c6">⚙️</div>
+        <div class="exp-info">
+          <div class="exp-title">Servo & Stepper Motor Handling</div>
+        </div>
+      </div>
+      <div class="exp-desc">Control SG90 servo with sweep and potentiometer. Drive 28BYJ-48 stepper with ULN2003. Understand PWM vs step sequences.</div>
+      <div class="exp-tags">
+        <span class="tag">Servo.h</span>
+        <span class="tag">Stepper.h</span>
+        <span class="tag">SG90</span>
+        <span class="tag">28BYJ-48</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-intermediate">Intermediate</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp07.html" class="exp-card">
+      <div class="exp-num">Exp 07</div>
+      <div class="exp-header">
+        <div class="exp-icon c7">🏠</div>
+        <div class="exp-info">
+          <div class="exp-title">Smart Home Sensors</div>
+        </div>
+      </div>
+      <div class="exp-desc">Integrate PIR, DHT11, LDR, and MQ-2 gas sensor. Drive relay and buzzer. Non-blocking event-driven multi-sensor architecture.</div>
+      <div class="exp-tags">
+        <span class="tag">PIR</span>
+        <span class="tag">DHT11</span>
+        <span class="tag">MQ-2</span>
+        <span class="tag">Relay</span>
+        <span class="tag">LDR</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-intermediate">Intermediate</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp08.html" class="exp-card">
+      <div class="exp-num">Exp 08</div>
+      <div class="exp-header">
+        <div class="exp-icon c8">🔄</div>
+        <div class="exp-info">
+          <div class="exp-title">DC Motor Speed Control</div>
+        </div>
+      </div>
+      <div class="exp-desc">Spin and control a DC motor with L298N H-bridge. Potentiometer speed control, soft-start ramping, direction toggle with debounce.</div>
+      <div class="exp-tags">
+        <span class="tag">L298N</span>
+        <span class="tag">H-Bridge</span>
+        <span class="tag">PWM</span>
+        <span class="tag">Debounce</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-intermediate">Intermediate</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp09.html" class="exp-card">
+      <div class="exp-num">Exp 09</div>
+      <div class="exp-header">
+        <div class="exp-icon c9">🌐</div>
+        <div class="exp-info">
+          <div class="exp-title">Working with Shields</div>
+        </div>
+      </div>
+      <div class="exp-desc">Stack an Ethernet Shield (W5100) and create a web server serving a live sensor dashboard to any browser on the local network.</div>
+      <div class="exp-tags">
+        <span class="tag">W5100</span>
+        <span class="tag">SPI</span>
+        <span class="tag">HTTP</span>
+        <span class="tag">DHCP</span>
+        <span class="tag">Web Server</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-advanced">Advanced</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="exp10.html" class="exp-card">
+      <div class="exp-num">Exp 10</div>
+      <div class="exp-header">
+        <div class="exp-icon c10">☁️</div>
+        <div class="exp-info">
+          <div class="exp-title">Interfacing Arduino with Cloud</div>
+        </div>
+      </div>
+      <div class="exp-desc">Send sensor data to ThingSpeak IoT platform over WiFi using ESP8266. View live graphs from anywhere in the world.</div>
+      <div class="exp-tags">
+        <span class="tag">ESP8266</span>
+        <span class="tag">ThingSpeak</span>
+        <span class="tag">HTTP REST</span>
+        <span class="tag">WiFi</span>
+        <span class="tag">IoT</span>
+      </div>
+      <div class="exp-footer">
+        <span class="exp-difficulty diff-advanced">Advanced</span>
+        <span class="exp-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+</main>
+
+<footer>
+  MJ DSE-2P · Practical of IoT (Arduino Lab) · 1 Credit · All 10 Experiments
+</footer>
+
+</body>
+</html>

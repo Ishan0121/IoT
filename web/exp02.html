@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exp 02 — Arduino IDE | IoT Lab</title>
+  <meta name="description" content="Installing and working with Arduino IDE 2.x — compilation pipeline, Serial Monitor, Library Manager.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp01.html" class="nav-back">← Exp 01</a>
+  <div class="nav-exp-id">Exp 02 / 10</div>
+  <a href="exp03.html" class="nav-next">Exp 03 →</a>
+</nav>
+
+<header class="exp-header">
+  <div class="exp-badge">Experiment 02</div>
+  <h1>Installing & Working<br>with Arduino IDE</h1>
+  <p class="exp-subtitle">Set up Arduino IDE 2.x, understand the full compilation pipeline from .ino to HEX, and master the Serial Monitor, Plotter, and Library Manager.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 Objective: IDE Setup & Usage</span>
+    <span class="meta-pill diff-beginner">Beginner</span>
+    <span class="meta-pill">1 Credit</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+  <!-- IDE LAYOUT SIMULATION -->
+  <section class="section">
+    <h2 class="section-title">💻 Arduino IDE Layout</h2>
+    <div class="ide-mockup">
+      <div class="ide-titlebar">
+        <div class="ide-dots">
+          <span style="background:#ef4444"></span>
+          <span style="background:#f59e0b"></span>
+          <span style="background:#22c55e"></span>
+        </div>
+        <span class="ide-title">Arduino IDE 2.x — sketch.ino</span>
+      </div>
+      <div class="ide-toolbar">
+        <button class="ide-toolbtn" title="Verify">✓ Verify</button>
+        <button class="ide-toolbtn" title="Upload">→ Upload</button>
+        <button class="ide-toolbtn">⌵ Board: Arduino UNO</button>
+        <button class="ide-toolbtn">⌵ Port: /dev/ttyUSB0</button>
+        <button class="ide-toolbtn ide-tbright">📟 Serial Monitor</button>
+      </div>
+      <div class="ide-body">
+        <div class="ide-sidebar">
+          <div class="ide-sb-item">📁 sketch</div>
+          <div class="ide-sb-item ide-sb-active">📄 sketch.ino</div>
+          <div class="ide-sb-item" style="padding-left:24px;font-size:10px">Libraries</div>
+          <div class="ide-sb-item" style="padding-left:24px;font-size:10px">Board Mgr</div>
+          <div class="ide-sb-item" style="padding-left:24px;font-size:10px">Debugger</div>
+        </div>
+        <div class="ide-editor">
+          <div class="ide-line"><span class="ide-ln">1</span><span class="ck">void</span> <span class="cf">setup</span>() {</div>
+          <div class="ide-line"><span class="ide-ln">2</span>  Serial.begin(<span class="cn">9600</span>);</div>
+          <div class="ide-line"><span class="ide-ln">3</span>  pinMode(<span class="cn">13</span>, OUTPUT);</div>
+          <div class="ide-line"><span class="ide-ln">4</span>}</div>
+          <div class="ide-line"><span class="ide-ln">5</span></div>
+          <div class="ide-line ide-line-active"><span class="ide-ln">6</span><span class="ck">void</span> <span class="cf">loop</span>() {</div>
+          <div class="ide-line"><span class="ide-ln">7</span>  digitalWrite(<span class="cn">13</span>, HIGH);</div>
+          <div class="ide-line"><span class="ide-ln">8</span>  delay(<span class="cn">1000</span>);</div>
+          <div class="ide-line"><span class="ide-ln">9</span>  digitalWrite(<span class="cn">13</span>, LOW);</div>
+          <div class="ide-line"><span class="ide-ln">10</span>  delay(<span class="cn">1000</span>);</div>
+          <div class="ide-line"><span class="ide-ln">11</span>}</div>
+        </div>
+      </div>
+      <div class="ide-output">
+        <div class="ide-output-header">Output</div>
+        <div class="ide-output-body">Sketch uses 924 bytes (2%) of program storage space. Maximum is 32256 bytes.<br>Global variables use 9 bytes (0%) of dynamic memory.<br><span style="color:#22c55e">Upload complete.</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPILATION PIPELINE -->
+  <section class="section">
+    <h2 class="section-title">⚙️ Compilation Pipeline</h2>
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-icon" style="background:rgba(79,142,247,0.15);color:var(--accent)">📝</div>
+        <div class="pipe-label">Your Sketch (.ino)</div>
+        <div class="pipe-detail">C++-like code with setup() and loop()</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-icon" style="background:rgba(124,58,237,0.15);color:var(--purple)">🔧</div>
+        <div class="pipe-label">Preprocessing</div>
+        <div class="pipe-detail">Arduino adds hidden includes and prototypes</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-icon" style="background:rgba(34,197,94,0.15);color:var(--green)">⚡</div>
+        <div class="pipe-label">avr-gcc compile</div>
+        <div class="pipe-detail">C++ → AVR object files (.o)</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-icon" style="background:rgba(245,158,11,0.15);color:var(--amber)">🔗</div>
+        <div class="pipe-label">Linking</div>
+        <div class="pipe-detail">Combine .o files + Arduino core library</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-icon" style="background:rgba(239,68,68,0.15);color:var(--red)">📦</div>
+        <div class="pipe-label">HEX File</div>
+        <div class="pipe-detail">Intel HEX format machine code</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-icon" style="background:rgba(20,184,166,0.15);color:var(--teal)">📡</div>
+        <div class="pipe-label">avrdude upload</div>
+        <div class="pipe-detail">Sends HEX to board via USB bootloader</div>
+      </div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-step">
+        <div class="pipe-icon" style="background:rgba(34,197,94,0.15);color:var(--green)">▶</div>
+        <div class="pipe-label">Program Runs!</div>
+        <div class="pipe-detail">ATmega328P executes your sketch</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BOARD CONFIG TABLE -->
+  <section class="section">
+    <h2 class="section-title">⚙️ Board Configuration</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Setting</th><th>Value for Arduino UNO</th></tr></thead>
+        <tbody>
+          <tr><td>Tools → Board</td><td>Arduino AVR Boards → <code>Arduino UNO</code></td></tr>
+          <tr><td>Tools → Port (Linux)</td><td><code>/dev/ttyUSB0</code> or <code>/dev/ttyACM0</code></td></tr>
+          <tr><td>Tools → Port (Windows)</td><td><code>COM3</code>, <code>COM4</code>, etc.</td></tr>
+          <tr><td>Tools → Programmer</td><td>AVRISP mkII (default)</td></tr>
+          <tr><td>Serial Monitor Baud</td><td>Must match <code>Serial.begin(9600)</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="code-container" style="margin-top:14px">
+      <div class="code-header">
+        <span class="code-filename">Linux permission fix</span>
+        <button class="copy-btn" onclick="copyCode('code02bash')">Copy</button>
+      </div>
+      <pre class="code-block" id="code02bash"><span class="cm"># If you get "permission denied" on /dev/ttyUSB0:</span>
+sudo usermod -aG dialout $USER
+<span class="cm"># Log out and back in for this to take effect</span></pre>
+    </div>
+  </section>
+
+  <!-- SIMPLE SOLUTION -->
+  <section class="section">
+    <h2 class="section-title">🟢 Simple Solution — First Upload Test</h2>
+    <div class="solution-banner simple">⭐ Start Here — the absolute minimum sketch to verify your IDE is installed and uploads correctly.</div>
+    <div class="code-container">
+      <div class="code-header"><span class="code-filename">simple.ino — Exp 02 (Beginner)</span><button class="copy-btn" onclick="copyCode('code02s')">Copy</button></div>
+      <pre class="code-block" id="code02s"><span class="cm">// First Arduino Sketch — verify IDE is working
+// Expected output in Serial Monitor: "Hello, Arduino!" every second</span>
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);  <span class="cm">// Open Serial Monitor at 9600 baud</span>
+  Serial.println(<span class="cs">&quot;Hello, Arduino!&quot;</span>);
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  Serial.print(<span class="cs">&quot;Uptime: &quot;</span>);
+  Serial.print(millis() / <span class="cn">1000</span>);
+  Serial.println(<span class="cs">&quot; seconds&quot;</span>);
+  delay(<span class="cn">1000</span>);
+}</pre>
+    </div>
+  </section>
+
+  <!-- ADVANCED SOLUTION -->
+  <section class="section">
+    <h2 class="section-title">💾 Advanced Solution — Serial Plotter + Sine Wave</h2>
+    <div class="solution-banner advanced">🚀 Advanced — demonstrates F() macro, Serial Plotter graphing, and non-blocking LED blink.</div>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-filename">program.ino — Exp 02</span>
+        <button class="copy-btn" onclick="copyCode('code02')">Copy</button>
+      </div>
+      <pre class="code-block" id="code02"><span class="cm">/*
+ * Experiment 02 — Arduino IDE Feature Demonstration
+ * Shows: Serial Monitor, Serial Plotter, LED blink
+ */</span>
+
+<span class="ck">const int</span> LED = <span class="cn">13</span>;
+<span class="ck">int</span> counter = <span class="cn">0</span>;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);
+  pinMode(LED, OUTPUT);
+  Serial.println(F(<span class="cs">"=== IDE Feature Demo ==="</span>));
+  Serial.println(F(<span class="cs">"Open Serial Plotter (Ctrl+Shift+L)"</span>));
+  Serial.println(F(<span class="cs">"to see a sine-wave pattern!"</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  counter++;
+
+  <span class="cm">// Sine wave for Serial Plotter</span>
+  <span class="ck">float</span> val = sin(counter * <span class="cn">0.1</span>) * <span class="cn">100</span> + <span class="cn">100</span>;
+  Serial.println(val);
+
+  <span class="cm">// LED blink every 500ms</span>
+  <span class="ck">static unsigned long</span> lastBlink = <span class="cn">0</span>;
+  <span class="ck">if</span> (millis() - lastBlink &gt;= <span class="cn">500</span>) {
+    lastBlink = millis();
+    digitalWrite(LED, !digitalRead(LED));
+  }
+
+  delay(<span class="cn">50</span>);
+}</pre>
+    </div>
+  </section>
+
+  <!-- FLOWCHART -->
+  <section class="section">
+    <h2 class="section-title">📊 IDE Workflow Flowchart</h2>
+    <div class="flowchart">
+      <div class="fc-start">Open Arduino IDE</div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-box">Select Board<br><span class="fc-detail">Tools → Board → Arduino UNO</span></div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-box">Select Port<br><span class="fc-detail">Tools → Port → /dev/ttyUSB0</span></div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-box">Write / Open Sketch<br><span class="fc-detail">.ino file with setup() and loop()</span></div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-diamond">Click Verify ✓</div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-branch">
+        <div class="fc-branch-yes"><div class="fc-mini" style="color:var(--red)">Error</div><div class="fc-box-sm">Read error line<br>Fix syntax</div></div>
+        <div class="fc-branch-no"><div class="fc-mini" style="color:var(--green)">OK</div><div class="fc-box-sm">Upload →<br>to board</div></div>
+      </div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-box">Open Serial Monitor<br><span class="fc-detail">Ctrl+Shift+M · Match baud rate</span></div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-end">View Output / Debug</div>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="section">
+    <h2 class="section-title">📝 Notes, Extras & Tips</h2>
+    <div class="notes-grid">
+      <div class="note-card note-info">
+        <div class="note-title">💡 IDE 1.x vs IDE 2.x</div>
+        <div class="note-body">IDE 2.x is a complete rewrite built on VS Code internals. It adds <strong>code autocomplete</strong>, inline error hints, a built-in debugger (for boards that support it), and a Serial Plotter that can graph multiple variables simultaneously. IDE 1.x still works, but 2.x is the recommended choice for new users.</div>
+      </div>
+      <div class="note-card note-warn">
+        <div class="note-title">⚠️ Baud Rate Mismatch</div>
+        <div class="note-body">The most common beginner mistake: <code>Serial.begin(9600)</code> in your sketch but the Serial Monitor is set to 115200. Result: garbage characters on screen. Always match the baud rate dropdown in the Serial Monitor to what you set in <code>Serial.begin()</code>.</div>
+      </div>
+      <div class="note-card note-tip">
+        <div class="note-title">🔋 F() Macro for Strings</div>
+        <div class="note-body">By default, string literals in Arduino are stored in SRAM (RAM). The UNO only has 2KB. Use <code>Serial.println(F("text"))</code> — the <strong>F() macro</strong> keeps strings in Flash memory, saving precious SRAM. Always use F() for debug messages.</div>
+      </div>
+      <div class="note-card note-info">
+        <div class="note-title">📊 Serial Plotter</div>
+        <div class="note-body">Print numeric values with <code>Serial.println(value)</code> and the Serial Plotter will graph them live. Print multiple values separated by spaces or commas for multi-line graphs. Excellent for visualizing sensor readings over time.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUNCTIONS -->
+  <section class="section">
+    <h2 class="section-title">🔧 Key IDE Functions & Commands</h2>
+    <div class="func-list">
+      <div class="func-item">
+        <code class="func-sig">Serial.begin(baudRate)</code>
+        <div class="func-desc">Initialize UART serial communication at the specified baud rate. Call in <code>setup()</code>. Must match the Serial Monitor dropdown.</div>
+      </div>
+      <div class="func-item">
+        <code class="func-sig">Serial.print(val) / Serial.println(val)</code>
+        <div class="func-desc">Send data to the Serial Monitor over USB. <code>println()</code> adds a newline. Accepts int, float, String, char. Use <code>F("string")</code> to store strings in Flash.</div>
+      </div>
+      <div class="func-item">
+        <code class="func-sig">Serial.available()</code>
+        <div class="func-desc">Returns the number of bytes waiting to be read from the serial buffer. Use to check if the user typed something in the Serial Monitor.</div>
+      </div>
+      <div class="func-item">
+        <code class="func-sig">Serial.read()</code>
+        <div class="func-desc">Read one byte from the serial buffer. Returns -1 if no data. Used to read user input from the Serial Monitor.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMMON ISSUES -->
+  <section class="section">
+    <h2 class="section-title">❌ Common IDE Issues & Fixes</h2>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Issue</th><th>Cause</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td>Port not found</td><td>Driver not installed</td><td>Install CH340 driver; run <code>usermod -aG dialout</code> on Linux</td></tr>
+          <tr><td>Unable to upload</td><td>Wrong board selected</td><td>Tools → Board → Arduino UNO</td></tr>
+          <tr><td>Sketch too large</td><td>Flash/SRAM overflow</td><td>Use <code>F()</code> macro; reduce variables</td></tr>
+          <tr><td>Serial Monitor garbled</td><td>Baud rate mismatch</td><td>Match <code>Serial.begin(X)</code> with monitor baud</td></tr>
+          <tr><td>avrdude timeout</td><td>Board not in bootloader</td><td>Press RESET before clicking Upload</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer class="exp-footer">
+  <a href="exp01.html">← Exp 01</a>
+  <span>Exp 02 of 10 · Arduino IDE</span>
+  <a href="exp03.html">Exp 03 →</a>
+</footer>
+
+<script src="shared.js"></script>
+<style>
+.ide-mockup {
+  background: #0d1117;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+}
+.ide-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.ide-dots { display: flex; gap: 6px; }
+.ide-dots span { width: 11px; height: 11px; border-radius: 50%; display: block; }
+.ide-title { font-size: 11px; color: #5a6477; }
+.ide-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 7px 10px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-wrap: wrap;
+}
+.ide-toolbtn {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: #8b95a8;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.15s;
+}
+.ide-toolbtn:hover { background: rgba(255,255,255,0.06); color: #e8ecf1; }
+.ide-tbright { margin-left: auto; }
+.ide-body { display: flex; min-height: 200px; }
+.ide-sidebar {
+  width: 130px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  padding: 8px 0;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.02);
+}
+.ide-sb-item {
+  padding: 5px 14px;
+  font-size: 11px;
+  color: #5a6477;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.ide-sb-item:hover { background: rgba(255,255,255,0.05); color: #8b95a8; }
+.ide-sb-active { background: rgba(79,142,247,0.1); color: #4f8ef7; }
+.ide-editor {
+  flex: 1;
+  padding: 12px 0;
+  overflow-x: auto;
+}
+.ide-line {
+  display: flex;
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 0 16px 0 8px;
+  color: #cdd9e5;
+}
+.ide-line-active { background: rgba(79,142,247,0.06); }
+.ide-ln {
+  min-width: 28px;
+  color: #3a4455;
+  user-select: none;
+  padding-right: 12px;
+}
+.ide-output {
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.ide-output-header {
+  font-size: 11px;
+  font-weight: 600;
+  color: #5a6477;
+  padding: 6px 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.ide-output-body {
+  padding: 10px 14px;
+  font-size: 11px;
+  color: #8b95a8;
+  line-height: 1.7;
+}
+.pipeline {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.pipe-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  min-width: 90px;
+  flex: 1;
+  text-align: center;
+}
+.pipe-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.pipe-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text);
+}
+.pipe-detail {
+  font-size: 10px;
+  color: var(--text2);
+  line-height: 1.4;
+}
+.pipe-arrow {
+  font-size: 18px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.fc-diamond {
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: var(--amber);
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+</style>
+</body>
+</html>

@@ -92,6 +92,9 @@ Timeline:
 
 ---
 
+[Back to top](#)
+
+---
 # UNIT I — Fundamentals of IoT
 
 ---
@@ -416,6 +419,10 @@ Machine A                           Machine B
 
 ---
 
+[Back to top](#)
+
+---
+
 # UNIT II — Sensors and Networks
 
 ---
@@ -551,17 +558,17 @@ Arduino is an open-source electronics platform based on easy-to-use hardware and
 ┌────────────────────────────────────────────┐
 │  [USB Port]        [Power Jack]            │
 │                                            │
-│  Pin 13 ──● (Built-in LED)                │
+│  Pin 13 ──● (Built-in LED)                 │
 │                                            │
 │  Digital Pins 0-13  (14 pins)              │
-│  ├── Pins 3,5,6,9,10,11 → PWM (~)         │
-│  ├── Pin 0,1 → Serial RX/TX               │
+│  ├── Pins 3,5,6,9,10,11 → PWM (~)          │
+│  ├── Pin 0,1 → Serial RX/TX                │
 │  └── Pin 13 → LED_BUILTIN                  │
 │                                            │
-│  Analog Pins A0-A5  (6 pins)              │
-│  └── 10-bit ADC (reads 0–1023)            │
+│  Analog Pins A0-A5  (6 pins)               │
+│  └── 10-bit ADC (reads 0–1023)             │
 │                                            │
-│  Power Pins: 5V, 3.3V, GND, Vin           │
+│  Power Pins: 5V, 3.3V, GND, Vin            │
 │                                            │
 │  [RESET Button]    [ICSP Header]           │
 │  ATmega328P Chip (brain of the board)      │
@@ -804,6 +811,10 @@ Decision / Action / Alert
 
 ---
 
+[Back to top](#)
+
+---
+
 # UNIT III — Data Handling & Analytics
 
 ---
@@ -816,7 +827,7 @@ When thousands of IoT sensors collect data 24/7, you get an unimaginable volume 
 
 ```
 ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
-│ Sensors  │───▶│  Edge    │───▶│ Gateway  │───▶│  Cloud   │───▶│Analytics │
+│ Sensors  │──▶│  Edge    │──▶│ Gateway  │──▶│  Cloud   │──▶│Analytics │
 │(Generate │    │Computing │    │(Protocol │    │(Storage  │    │(Insights)│
 │  Data)   │    │(Filter)  │    │ Bridge)  │    │  + AI)   │    │          │
 └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
@@ -1153,6 +1164,10 @@ Business Action
 
 ---
 
+[Back to top](#)
+
+---
+
 # UNIT IV — Applications of IoT
 
 ---
@@ -1166,14 +1181,14 @@ A network of interconnected devices in a home that can be controlled remotely, a
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    SMART HOME                        │
+│                    SMART HOME                       │
 │                                                     │
 │  💡 Smart Lighting    🌡️ Smart Thermostat           │
 │  🔒 Smart Locks       📷 Security Cameras           │
 │  🔌 Smart Plugs       🔊 Smart Speakers             │
 │  🤖 Robotic Vacuum    🍳 Smart Appliances           │
 │                                                     │
-│  All connected via: WiFi / Zigbee / Z-Wave         │
+│  All connected via: WiFi / Zigbee / Z-Wave          │
 │  Controlled by: Mobile App / Voice Assistant        │
 └─────────────────────────────────────────────────────┘
 ```
@@ -1286,17 +1301,17 @@ Manufacturer → Warehouse → Distribution → Retail → Consumer
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│              SMART FARM ARCHITECTURE                 │
+│              SMART FARM ARCHITECTURE                │
 │                                                     │
-│  🌱 Soil Sensors     → NPK, moisture, pH           │
-│  🌦️ Weather Station  → Rain, temp, humidity, wind  │
-│  🐄 Animal Wearables → Health, location, activity  │
-│  🚜 GPS Tractors     → Auto-steer, variable rate   │
-│  🛸 Drones           → Crop surveillance, spraying │
-│  💧 Irrigation       → Auto water based on need   │
-│  🏚️ Greenhouse       → Auto climate control        │
+│  🌱 Soil Sensors     → NPK, moisture, pH            │
+│  🌦️ Weather Station  → Rain, temp, humidity, wind   │
+│  🐄 Animal Wearables → Health, location, activity   │
+│  🚜 GPS Tractors     → Auto-steer, variable rate    │
+│  🛸 Drones           → Crop surveillance, spraying  │
+│  💧 Irrigation       → Auto water based on need     │
+│  🏚️ Greenhouse       → Auto climate control         │
 │                                                     │
-│  All connected → Farm Management Software          │
+│  All connected → Farm Management Software           │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -1434,6 +1449,10 @@ Scenario 3: Autonomous Vehicle
 Emergency: hit wall or hit pedestrian?
 → Who programmed the ethics?
 ```
+
+---
+
+[Back to top](#)
 
 ---
 
@@ -2934,6 +2953,10 @@ Step 7: Watch real-time graphs update!
 
 ---
 
+[Back to top](#)
+
+---
+
 # References and Further Reading
 
 ## Textbooks (Official Course Texts)
@@ -3002,3 +3025,9 @@ Step 7: Watch real-time graphs update!
 *Practical section based on: MJ DSE-2P: Practical of IoT (Arduino Lab) | Credits 01*
 
 *Last updated: April 2026*
+
+
+
+[Back to top](#)
+
+---

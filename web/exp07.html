@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Exp 07 — Smart Home Sensors | IoT Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp06.html">← Exp 06</a>
+  <div class="nav-exp-id">Exp 07 / 10</div>
+  <a href="exp08.html">Exp 08 →</a>
+</nav>
+<header class="exp-header">
+  <div class="exp-badge">Experiment 07</div>
+  <h1>Smart Home Sensors<br>with Arduino</h1>
+  <p class="exp-subtitle">Integrate PIR motion, DHT11 climate, LDR light, and MQ-2 gas sensors. Drive relay and buzzer with non-blocking event-driven architecture.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 PIR · DHT11 · MQ-2 · LDR · Relay</span>
+    <span class="meta-pill diff-intermediate">Intermediate</span>
+    <span class="meta-pill">Library: DHT.h</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+<section class="section">
+  <h2 class="section-title">🛠️ Common Smart Home Sensors Reference</h2>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Sensor Module</th><th>Type</th><th>Key Feature</th><th>Typical Use Case</th></tr></thead>
+      <tbody>
+        <tr><td><strong>PIR (HC-SR501)</strong></td><td>Digital</td><td>Detects infrared motion up to 7 meters.</td><td>Security alarms, auto-lights.</td></tr>
+        <tr><td><strong>DHT11 / DHT22</strong></td><td>Digital</td><td>Reads Temp &amp; Humidity via 1-wire protocol.</td><td>Climate monitoring, AC control.</td></tr>
+        <tr><td><strong>LDR (Photoresistor)</strong></td><td>Analog</td><td>Resistance decreases as light increases.</td><td>Day/Night detection, street lights.</td></tr>
+        <tr><td><strong>MQ-2 Gas Sensor</strong></td><td>Analog</td><td>Detects combustible gases and smoke.</td><td>Fire alarms, gas leak detection.</td></tr>
+        <tr><td><strong>HC-SR04 Ultrasonic</strong></td><td>Digital</td><td>Measures distance via sound waves.</td><td>Water tank level, proximity alert.</td></tr>
+        <tr><td><strong>BMP280 / BME280</strong></td><td>I2C/SPI</td><td>Barometric pressure, temperature, altitude.</td><td>Weather stations.</td></tr>
+        <tr><td><strong>DS18B20</strong></td><td>Digital</td><td>Waterproof temperature sensor.</td><td>Aquarium temp, outdoor soil temp.</td></tr>
+        <tr><td><strong>Soil Moisture</strong></td><td>Analog</td><td>Measures water content in soil.</td><td>Automated plant watering.</td></tr>
+        <tr><td><strong>Rain Drop Sensor</strong></td><td>Analog</td><td>Detects water drops on a plate.</td><td>Auto-closing smart windows.</td></tr>
+        <tr><td><strong>Sound Sensor (KY-037)</strong></td><td>Analog/Dig</td><td>Detects noise levels/claps.</td><td>Clap-on lights, baby monitor.</td></tr>
+        <tr><td><strong>Water Level Sensor</strong></td><td>Analog</td><td>Detects water depth.</td><td>Flood detection, sump pump trigger.</td></tr>
+        <tr><td><strong>RFID (RC522)</strong></td><td>SPI</td><td>Reads NFC/RFID tags and cards.</td><td>Smart door locks, access control.</td></tr>
+        <tr><td><strong>Flame Sensor</strong></td><td>Analog/Dig</td><td>Detects infrared light from fire.</td><td>Fire detection systems.</td></tr>
+        <tr><td><strong>Vibration (SW-420)</strong></td><td>Digital</td><td>Detects physical shock or vibration.</td><td>Window break alarm, earthquake detector.</td></tr>
+        <tr><td><strong>Touch Sensor (TTP223)</strong></td><td>Digital</td><td>Capacitive touch detection.</td><td>Hidden smart switches.</td></tr>
+        <tr><td><strong>Magnetic Reed Switch</strong></td><td>Digital</td><td>Detects presence of a magnet.</td><td>Door/Window open/close state.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔌 Circuit Pin Map</h2>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Sensor/Device</th><th>Pin</th><th>Type</th><th>Function</th></tr></thead>
+      <tbody>
+        <tr><td>PIR Sensor</td><td>2</td><td>Digital INPUT</td><td>Motion detection</td></tr>
+        <tr><td>DHT11</td><td>3</td><td>Digital (1-Wire)</td><td>Temperature + Humidity</td></tr>
+        <tr><td>LDR</td><td>A0</td><td>Analog INPUT</td><td>Light level (voltage divider)</td></tr>
+        <tr><td>MQ-2 Gas</td><td>A1</td><td>Analog INPUT</td><td>Gas concentration (warm up 30s!)</td></tr>
+        <tr><td>Relay Module</td><td>7</td><td>Digital OUTPUT</td><td>Auto lamp control</td></tr>
+        <tr><td>Buzzer</td><td>8</td><td>Digital OUTPUT</td><td>Gas alarm</td></tr>
+        <tr><td>Light LED</td><td>9</td><td>Digital OUTPUT</td><td>Auto-light indicator</td></tr>
+        <tr><td>Gas LED</td><td>10</td><td>Digital OUTPUT</td><td>Gas alert visual</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution — PIR Motion Sensor + LED</h2>
+  <div class="solution-banner simple">⭐ Start Here — one sensor (PIR), one output (LED). Just 2 pins and a <code>digitalRead</code>.</div>
+  <!-- Simple Sim -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px;display:flex;gap:16px;align-items:center">
+        <button class="sim-btn" id="sim7PirBtn" onmousedown="sim7Trigger(true)" onmouseup="sim7Trigger(false)" onmouseleave="sim7Trigger(false)">Hold for Motion</button>
+        <div id="sim7Led" style="width:40px;height:40px;border-radius:50%;background:#22c55e;border:3px solid #1a4a2a;transition:all 0.08s"></div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Serial Monitor</div>
+        <div id="sim7Serial" style="background:#0c111d;border-radius:6px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);height:80px;overflow-y:auto;border:1px solid var(--border)"></div>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <span style="font-size:11px;color:var(--text3)">Simulates basic <code>digitalRead()</code> and <code>digitalWrite()</code></span>
+    </div>
+  </div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">simple.ino — Exp 07 (Beginner)</span><button class="copy-btn" onclick="copyCode('code07s')">Copy</button></div>
+    <pre class="code-block" id="code07s"><span class="cm">// Simple PIR Motion Detector
+// PIR OUT → Pin 2 | LED → Pin 13</span>
+
+<span class="ck">const int</span> PIR_PIN = <span class="cn">2</span>;
+<span class="ck">const int</span> LED_PIN = <span class="cn">13</span>;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);
+  pinMode(PIR_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="ck">int</span> motion = digitalRead(PIR_PIN);
+
+  <span class="ck">if</span>(motion == HIGH) {
+    digitalWrite(LED_PIN, HIGH);   <span class="cm">// Turn LED ON</span>
+    Serial.println(<span class="cs">&quot;Motion detected!&quot;</span>);
+  } <span class="ck">else</span> {
+    digitalWrite(LED_PIN, LOW);    <span class="cm">// Turn LED OFF</span>
+  }
+  delay(<span class="cn">200</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution 2 — DHT11 Temp &amp; Humidity</h2>
+  <div class="solution-banner simple">⭐ Beginner — requires the DHT sensor library. Reads and prints climate data.</div>
+  
+  <!-- Simple Sim 2 -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px">
+        <div style="display:flex;gap:12px;margin-bottom:12px;align-items:center">
+          <label style="font-size:12px;color:var(--text2);min-width:40px">Temp</label>
+          <input type="range" id="sim7DhtTemp" min="0" max="50" value="24" style="flex:1" oninput="document.getElementById('s7TempV').textContent=this.value+'°C'">
+          <span id="s7TempV" style="font-size:12px;color:var(--accent);min-width:35px">24°C</span>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center">
+          <label style="font-size:12px;color:var(--text2);min-width:40px">Hum</label>
+          <input type="range" id="sim7DhtHum" min="20" max="90" value="60" style="flex:1" oninput="document.getElementById('s7HumV').textContent=this.value+'%'">
+          <span id="s7HumV" style="font-size:12px;color:var(--teal);min-width:35px">60%</span>
+        </div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Serial Monitor</div>
+        <div id="sim7DhtSerial" style="background:#0c111d;border-radius:6px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);height:80px;overflow-y:auto;border:1px solid var(--border)"></div>
+      </div>
+    </div>
+    <div class="sim-controls"><span style="font-size:11px;color:var(--text3)">Simulates <code>dht.readTemperature()</code></span></div>
+  </div>
+
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">dht_simple.ino</span><button class="copy-btn" onclick="copyCode('code07dht')">Copy</button></div>
+    <pre class="code-block" id="code07dht"><span class="cp">#include</span> &lt;DHT.h&gt;
+
+<span class="cp">#define</span> DHTPIN 3
+<span class="cp">#define</span> DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);
+  dht.begin();
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="cm">// Read humidity and temperature</span>
+  <span class="ck">float</span> h = dht.readHumidity();
+  <span class="ck">float</span> t = dht.readTemperature();
+
+  Serial.print(<span class="cs">"Temp: "</span>);
+  Serial.print(t);
+  Serial.print(<span class="cs">"°C  |  Humidity: "</span>);
+  Serial.print(h);
+  Serial.println(<span class="cs">"%"</span>);
+
+  delay(<span class="cn">2000</span>); <span class="cm">// DHT11 requires 2s between readings</span>
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution 3 — LDR Light Sensor</h2>
+  <div class="solution-banner simple">⭐ Beginner — uses analogRead to detect darkness and turn on a relay/lamp automatically.</div>
+
+  <!-- Simple Sim 3 -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px">
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:8px">Light Level (Sunlight vs Night)</label>
+        <input type="range" id="sim7LdrVal" min="0" max="1023" value="300" style="width:100%" oninput="sim7UpdateLdr(+this.value)">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;text-align:right">Analog: <span id="s7LdrV">300</span></div>
+      </div>
+      <div style="flex:1;min-width:100px;text-align:center;display:flex;flex-direction:column;align-items:center">
+        <div id="sim7Lamp" style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.05);border:3px solid #333;transition:all 0.3s;margin-bottom:8px"></div>
+        <div style="font-size:11px;font-weight:600;color:var(--text2)" id="sim7LampLbl">LAMP OFF</div>
+      </div>
+    </div>
+    <div class="sim-controls"><span style="font-size:11px;color:var(--text3)">Simulates <code>analogRead()</code> and conditional logic</span></div>
+  </div>
+
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">ldr_simple.ino</span><button class="copy-btn" onclick="copyCode('code07ldr')">Copy</button></div>
+    <pre class="code-block" id="code07ldr"><span class="ck">const int</span> LDR_PIN = A0;
+<span class="ck">const int</span> RELAY_PIN = <span class="cn">7</span>;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);
+  pinMode(RELAY_PIN, OUTPUT);
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="ck">int</span> lightLevel = analogRead(LDR_PIN);
+  Serial.print(<span class="cs">"Light: "</span>);
+  Serial.println(lightLevel);
+
+  <span class="cm">// If it gets dark (high resistance, high analog value)</span>
+  <span class="ck">if</span>(lightLevel &gt; <span class="cn">600</span>) {
+    digitalWrite(RELAY_PIN, HIGH); <span class="cm">// Turn lamp ON</span>
+  } <span class="ck">else</span> {
+    digitalWrite(RELAY_PIN, LOW);  <span class="cm">// Turn lamp OFF</span>
+  }
+  
+  delay(<span class="cn">500</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🏠 Smart Home Dashboard Simulator</h2>
+  <div class="sim-frame">
+    <div style="padding:16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+      <!-- PIR -->
+      <div class="sensor-widget" id="pirWidget">
+        <div class="sw-icon">👁️</div>
+        <div class="sw-title">PIR Motion</div>
+        <div class="sw-val" id="pirVal">No Motion</div>
+        <button class="sim-btn" style="margin-top:8px;width:100%" onclick="triggerPIR()">Trigger Motion</button>
+      </div>
+      <!-- DHT11 -->
+      <div class="sensor-widget">
+        <div class="sw-icon">🌡️</div>
+        <div class="sw-title">DHT11 Temp</div>
+        <div class="sw-val" id="tempVal" style="color:var(--accent)">24.5°C</div>
+        <input type="range" min="10" max="50" value="24" style="width:100%;margin-top:8px" oninput="updateTemp(+this.value)">
+      </div>
+      <!-- Humidity -->
+      <div class="sensor-widget">
+        <div class="sw-icon">💧</div>
+        <div class="sw-title">DHT11 Humidity</div>
+        <div class="sw-val" id="humVal" style="color:var(--teal)">65%</div>
+        <input type="range" min="10" max="100" value="65" style="width:100%;margin-top:8px" oninput="updateHum(+this.value)">
+      </div>
+      <!-- LDR -->
+      <div class="sensor-widget">
+        <div class="sw-icon">☀️</div>
+        <div class="sw-title">LDR Light</div>
+        <div class="sw-val" id="ldrVal" style="color:var(--amber)">350</div>
+        <input type="range" min="0" max="1023" value="350" style="width:100%;margin-top:8px" oninput="updateLDR(+this.value)">
+      </div>
+      <!-- Gas -->
+      <div class="sensor-widget" id="gasWidget">
+        <div class="sw-icon">💨</div>
+        <div class="sw-title">MQ-2 Gas</div>
+        <div class="sw-val" id="gasVal" style="color:var(--green)">120 — Safe</div>
+        <input type="range" min="0" max="700" value="120" style="width:100%;margin-top:8px" oninput="updateGas(+this.value)">
+      </div>
+      <!-- Relay -->
+      <div class="sensor-widget" id="relayWidget">
+        <div class="sw-icon">💡</div>
+        <div class="sw-title">Relay (Lamp)</div>
+        <div class="sw-val" id="relayVal" style="color:var(--text2)">OFF</div>
+        <div style="width:36px;height:36px;border-radius:50%;margin:8px auto 0;transition:all .3s" id="relayLamp"></div>
+      </div>
+    </div>
+    <div style="padding:8px 16px 12px;border-top:1px solid var(--border)">
+      <div style="font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px">SYSTEM LOG</div>
+      <div id="systemLog" style="font-family:JetBrains Mono,monospace;font-size:11px;color:var(--text2);height:80px;overflow-y:auto;line-height:1.8"></div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">💾 Advanced Solution — PIR + DHT11 + LDR + MQ-2 + Relay</h2>
+  <div class="solution-banner advanced">🚀 Advanced — 4 sensors working together with non-blocking timers, relay auto-control, and gas alarm.</div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">program.ino — Exp 07</span><button class="copy-btn" onclick="copyCode('code07')">Copy</button></div>
+    <pre class="code-block" id="code07"><span class="cp">#include</span> &lt;DHT.h&gt;
+
+<span class="ck">const int</span> PIR_PIN=2, DHT_PIN=3, LDR_PIN=A0, GAS_PIN=A1;
+<span class="ck">const int</span> RELAY=7, BUZZ=8, LIGHT_LED=9, GAS_LED=10;
+<span class="ck">const int</span> DARK_THRESH=600, GAS_THRESH=400;
+<span class="ck">const float</span> HOT_TEMP=35.0, HIGH_HUM=80.0;
+<span class="ck">const unsigned long</span> NO_MOTION_MS=10000UL;
+
+<span class="cp">#define</span> DHTTYPE DHT11
+DHT dht(DHT_PIN, DHTTYPE);
+
+<span class="ck">unsigned long</span> lastMotionTime=0, lastDHTTime=0, lastPrint=0;
+<span class="ck">bool</span> relayState=<span class="cn">false</span>;
+
+<span class="ck">void</span> <span class="cf">checkMotion</span>(){
+  <span class="ck">bool</span> motion=digitalRead(PIR_PIN);
+  <span class="ck">if</span>(motion){
+    lastMotionTime=millis();
+    <span class="ck">if</span>(!relayState){relayState=true;digitalWrite(RELAY,HIGH);
+      Serial.println(F(<span class="cs">"[PIR] Motion → Relay ON"</span>));}
+  } <span class="ck">else if</span>(relayState&amp;&amp;millis()-lastMotionTime&gt;NO_MOTION_MS){
+    relayState=false;digitalWrite(RELAY,LOW);
+    Serial.println(F(<span class="cs">"[PIR] No motion 10s → Relay OFF"</span>));
+  }
+}
+
+<span class="ck">void</span> <span class="cf">readClimate</span>(){
+  <span class="ck">float</span> temp=dht.readTemperature(), hum=dht.readHumidity();
+  <span class="ck">if</span>(isnan(temp)||isnan(hum)){Serial.println(F(<span class="cs">"[DHT] Error"</span>));return;}
+  Serial.print(F(<span class="cs">"[DHT] "</span>));Serial.print(temp,1);Serial.print(F(<span class="cs">"°C  "</span>));Serial.print(hum,1);
+  Serial.print(F(<span class="cs">"%"</span>));
+  <span class="ck">if</span>(temp&gt;HOT_TEMP) Serial.print(F(<span class="cs">"  ⚠TEMP HIGH"</span>));
+  <span class="ck">if</span>(hum&gt;HIGH_HUM)  Serial.print(F(<span class="cs">"  ⚠HUMID HIGH"</span>));
+  Serial.println();
+}
+
+<span class="ck">void</span> <span class="cf">checkLight</span>(){
+  <span class="ck">bool</span> dark=analogRead(LDR_PIN)&gt;DARK_THRESH;
+  digitalWrite(LIGHT_LED,dark?HIGH:LOW);
+}
+
+<span class="ck">void</span> <span class="cf">checkGas</span>(){
+  <span class="ck">bool</span> danger=analogRead(GAS_PIN)&gt;GAS_THRESH;
+  digitalWrite(GAS_LED,danger?HIGH:LOW);
+  digitalWrite(BUZZ,danger?HIGH:LOW);
+  <span class="ck">if</span>(danger) Serial.println(F(<span class="cs">"[GAS] ⚠ DANGER!"</span>));
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">9600</span>); dht.begin();
+  pinMode(PIR_PIN,INPUT);
+  <span class="ck">int</span> outs[]={RELAY,BUZZ,LIGHT_LED,GAS_LED};
+  <span class="ck">for</span>(<span class="ck">int</span> i=0;i&lt;4;i++){pinMode(outs[i],OUTPUT);digitalWrite(outs[i],LOW);}
+  Serial.println(F(<span class="cs">"=== Smart Home System Ready ==="</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  <span class="ck">unsigned long</span> now=millis();
+  checkMotion();
+  <span class="ck">if</span>(now-lastDHTTime&gt;2000){lastDHTTime=now;readClimate();}
+  checkLight(); checkGas();
+  delay(<span class="cn">100</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📊 Event-Driven Architecture Flowchart</h2>
+  <div class="flowchart">
+    <div class="fc-start">setup() — init sensors & pins</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-loop-label">loop() — runs every 100ms</div>
+    <div class="fc-loop-body" style="gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%">
+        <div class="fc-box-sm" style="background:rgba(79,142,247,.08);border-color:rgba(79,142,247,.3);color:var(--accent)">checkMotion()<br><span style="font-size:10px;color:var(--text2)">PIR → Relay ON/OFF after 10s timeout</span></div>
+        <div class="fc-box-sm" style="background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.3);color:var(--teal)">readClimate()<br><span style="font-size:10px;color:var(--text2)">Every 2s: DHT11 temp+humidity</span></div>
+        <div class="fc-box-sm" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3);color:var(--amber)">checkLight()<br><span style="font-size:10px;color:var(--text2)">LDR → LED auto-on when dark</span></div>
+        <div class="fc-box-sm" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);color:var(--red)">checkGas()<br><span style="font-size:10px;color:var(--text2)">MQ-2 → Alarm if gas &gt; threshold</span></div>
+      </div>
+      <div class="fc-box">delay(100) → next iteration</div>
+    </div>
+    <div class="fc-arrow-back">↑ repeat forever</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📝 Notes & Extras</h2>
+  <div class="notes-grid">
+    <div class="note-card note-warn">
+      <div class="note-title">⚠️ MQ-2 Warm-Up Time</div>
+      <div class="note-body">MQ-2 gas sensor needs 30 seconds of heating before readings stabilize. The heater coil inside must reach operating temperature. Readings during warm-up are unreliable — always add a warm-up delay loop in <code>setup()</code> before starting monitoring.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">💡 LDR Voltage Divider</div>
+      <div class="note-body">An LDR (Light-Dependent Resistor) changes resistance with light. Pair with 10kΩ fixed resistor: <code>5V → 10kΩ → A0 → LDR → GND</code>. In bright light: LDR resistance drops → voltage at A0 drops (low reading). In dark: LDR resistance rises → A0 voltage rises (high reading &gt; threshold).</div>
+    </div>
+    <div class="note-card note-tip">
+      <div class="note-title">🔧 isnan() for DHT Validation</div>
+      <div class="note-body"><code>dht.readTemperature()</code> returns <code>NaN</code> (Not a Number) on failure (bad wiring, timing). Always check <code>isnan(temp) || isnan(hum)</code> before using the values — printing NaN to Serial causes strange output and attempting math with it propagates errors.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">🏠 Relay Wiring Safety</div>
+      <div class="note-body">Relay module's INPUT (IN pin) connects to Arduino digital pin. The OUTPUT side (COM/NO/NC) switches high-voltage AC or DC. <strong>Never touch the AC side while powered.</strong> For lab demos, use low-voltage DC loads (LED strip, fan) instead of mains AC.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔧 Key Functions</h2>
+  <div class="func-list">
+    <div class="func-item"><code class="func-sig">dht.readTemperature() / dht.readHumidity()</code><div class="func-desc">Read temperature (°C) and humidity (%) from DHT11. Returns NaN on error. DHT11 needs 2s minimum between readings — track timing with millis().</div></div>
+    <div class="func-item"><code class="func-sig">isnan(value)</code><div class="func-desc">Returns true if the float value is NaN (Not a Number). Essential for DHT sensor validation — always check before use.</div></div>
+    <div class="func-item"><code class="func-sig">analogRead(pin)</code><div class="func-desc">Read analog pin value 0–1023 (0V–5V). Used for LDR and MQ-2 sensors. Compare against threshold constants to determine state.</div></div>
+    <div class="func-item"><code class="func-sig">checkMotion() — custom</code><div class="func-desc">Non-blocking PIR handler: sets relay ON immediately when motion detected, starts 10s timer. Turns relay OFF only after 10s of continuous no-motion — prevents rapid cycling.</div></div>
+  </div>
+</section>
+
+</main>
+<footer class="exp-footer">
+  <a href="exp06.html">← Exp 06</a>
+  <span>Exp 07 of 10 · Smart Home</span>
+  <a href="exp08.html">Exp 08 →</a>
+</footer>
+<script src="shared.js"></script>
+<script>
+const logEl = document.getElementById('systemLog');
+let relayOn=false, pirTimeout=null;
+
+function log(msg){
+  const t=new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  logEl.innerHTML=`<span style="color:var(--text3)">[${t}]</span> ${msg}\n`+logEl.innerHTML;
+}
+
+function triggerPIR(){
+  document.getElementById('pirVal').textContent='Motion!';
+  document.getElementById('pirVal').style.color='var(--green)';
+  document.getElementById('pirWidget').style.background='rgba(34,197,94,0.08)';
+  if(!relayOn){relayOn=true;setRelay(true);log('<span style="color:var(--green)">[PIR] Motion detected → Relay ON</span>');}
+  clearTimeout(pirTimeout);
+  pirTimeout=setTimeout(()=>{
+    document.getElementById('pirVal').textContent='No Motion';
+    document.getElementById('pirVal').style.color='var(--text2)';
+    document.getElementById('pirWidget').style.background='';
+    relayOn=false;setRelay(false);
+    log('<span style="color:var(--text2)">[PIR] No motion 10s → Relay OFF</span>');
+  },5000);
+}
+
+function setRelay(on){
+  const lamp=document.getElementById('relayLamp');
+  document.getElementById('relayVal').textContent=on?'ON':'OFF';
+  document.getElementById('relayVal').style.color=on?'var(--amber)':'var(--text2)';
+  lamp.style.background=on?'rgba(245,158,11,0.8)':'rgba(255,255,255,0.05)';
+  lamp.style.boxShadow=on?'0 0 20px 6px rgba(245,158,11,0.5)':'none';
+}
+
+function updateTemp(v){document.getElementById('tempVal').textContent=v+'°C';if(v>35)log('<span style="color:var(--red)">[DHT] ⚠ TEMP HIGH: '+v+'°C</span>');else log('[DHT] Temp: '+v+'°C');}
+function updateHum(v){document.getElementById('humVal').textContent=v+'%';if(v>80)log('<span style="color:var(--amber)">[DHT] ⚠ HUMID HIGH: '+v+'%</span>');}
+function updateLDR(v){document.getElementById('ldrVal').textContent=v;const dark=v>600;log('[LDR] '+v+(dark?' → DARK (LED ON)':' → BRIGHT'));}
+function updateGas(v){
+  const danger=v>400;
+  document.getElementById('gasVal').textContent=v+(danger?' — ⚠ DANGER':' — Safe');
+  document.getElementById('gasVal').style.color=danger?'var(--red)':'var(--green)';
+  document.getElementById('gasWidget').style.background=danger?'rgba(239,68,68,0.08)':'';
+  if(danger) log('<span style="color:var(--red)">[GAS] ⚠ DANGER! Level: '+v+' — ALARM ON</span>');
+}
+log('<span style="color:var(--green)">System initialized. Monitoring started.</span>');
+
+// ── Simple Sim Logic ──
+function sim7Trigger(active) {
+  const led = document.getElementById('sim7Led');
+  const serial = document.getElementById('sim7Serial');
+  if(!led || !serial) return;
+  
+  if(active) {
+    led.style.background = '#22c55e';
+    led.style.boxShadow = '0 0 20px 6px rgba(34,197,94,0.6)';
+    serial.textContent += "Motion detected!\n";
+    serial.scrollTop = serial.scrollHeight;
+    if (serial.textContent.length > 500) serial.textContent = serial.textContent.substring(serial.textContent.length - 400);
+  } else {
+    led.style.background = 'rgba(34,197,94,0.1)';
+    led.style.boxShadow = 'none';
+  }
+}
+sim7Trigger(false);
+
+// DHT11 Simple Logic
+setInterval(()=>{
+  const s = document.getElementById('sim7DhtSerial');
+  const t = document.getElementById('sim7DhtTemp');
+  const h = document.getElementById('sim7DhtHum');
+  if(!s||!t||!h) return;
+  s.textContent += `Temp: ${t.value}.00°C  |  Humidity: ${h.value}.00%\n`;
+  s.scrollTop = s.scrollHeight;
+  if(s.textContent.length > 500) s.textContent = s.textContent.substring(s.textContent.length - 400);
+}, 2000);
+
+// LDR Simple Logic
+function sim7UpdateLdr(v) {
+  const lbl = document.getElementById('s7LdrV');
+  const lamp = document.getElementById('sim7Lamp');
+  const txt = document.getElementById('sim7LampLbl');
+  if(!lbl||!lamp) return;
+  lbl.textContent = v;
+  if(v > 600) {
+    lamp.style.background = '#f59e0b';
+    lamp.style.boxShadow = '0 0 20px 4px rgba(245,158,11,0.5)';
+    txt.textContent = 'LAMP ON (DARK)';
+    txt.style.color = '#f59e0b';
+  } else {
+    lamp.style.background = 'rgba(255,255,255,0.05)';
+    lamp.style.boxShadow = 'none';
+    txt.textContent = 'LAMP OFF (BRIGHT)';
+    txt.style.color = 'var(--text2)';
+  }
+}
+sim7UpdateLdr(300);
+
+</script>
+<style>
+.sensor-widget{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;transition:background .3s}
+.sw-icon{font-size:24px}
+.sw-title{font-size:11px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em}
+.sw-val{font-size:14px;font-weight:600;color:var(--text);font-family:'JetBrains Mono',monospace}
+</style>
+</body>
+</html>

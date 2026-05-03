@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Arduino UNO R3 Pinout</title>
+  <link href="./style.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- uno: full-viewport centering container -->
+  <div class="uno">
+
+    <!-- SVG layer for connecting lines -->
+    <svg id="connection-svg" class="connection-layer"></svg>
+
+    <!-- board-wrapper: hugs the image — hotspot % coords are relative to THIS -->
+    <div class="board-wrapper">
+
+      <img src="./assets/Arduino R3.png" alt="Arduino UNO R3">
+
+      <div class="hotspot-layer">
+
+        <div class="hotspot usb-jack" data-tags='[{"label":"USB Type-B","color":"gray"},{"label":"Data / 5V Power","color":"white"}]'></div>
+        <div class="hotspot reset" data-tags='[{"label":"RESET Button","color":"red"},{"label":"Restarts MCU","color":"white"}]'></div>
+
+        <div class="hotspot upper-pins">
+          <div class="pin" data-tags='[{"label":"SCL","color":"blue"},{"label":"ADC5","color":"green"},{"label":"PCINT13","color":"white"},{"label":"A5","color":"green"},{"label":"PC5","color":"yellow"},{"label":"28","color":"gray"}]'></div>
+          <div class="pin" data-tags='[{"label":"SDA","color":"blue"},{"label":"ADC4","color":"green"},{"label":"PCINT12","color":"white"},{"label":"A4","color":"green"},{"label":"PC4","color":"yellow"},{"label":"27","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"AREF","color":"green"},{"label":"21","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"GND","color":"black"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"SCK","color":"blue"},{"label":"PCINT5","color":"white"},{"label":"13","color":"pink"},{"label":"PB5","color":"yellow"},{"label":"19","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"MISO","color":"blue"},{"label":"PCINT4","color":"white"},{"label":"12","color":"pink"},{"label":"PB4","color":"yellow"},{"label":"18","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"MOSI","color":"blue"},{"label":"PWM","color":"red"},{"label":"PCINT3","color":"white"},{"label":"11","color":"pink"},{"label":"PB3","color":"yellow"},{"label":"17","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"SS","color":"white"},{"label":"PWM","color":"red"},{"label":"PCINT2","color":"white"},{"label":"10","color":"pink"},{"label":"PB2","color":"yellow"},{"label":"16","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"PWM","color":"red"},{"label":"PCINT1","color":"white"},{"label":"9","color":"pink"},{"label":"PB1","color":"yellow"},{"label":"15","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"ICP1","color":"white"},{"label":"PCINT0","color":"white"},{"label":"CLKO","color":"white"},{"label":"8","color":"pink"},{"label":"PB0","color":"yellow"},{"label":"14","color":"gray"}]'></div>
+          <div class="gap"></div>
+          <div class="pin digital" data-tags='[{"label":"PCINT23","color":"white"},{"label":"AIN1","color":"white"},{"label":"7","color":"pink"},{"label":"PD7","color":"yellow"},{"label":"13","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"OC0A","color":"white"},{"label":"PWM","color":"red"},{"label":"PCINT22","color":"white"},{"label":"AIN0","color":"white"},{"label":"6","color":"pink"},{"label":"PD6","color":"yellow"},{"label":"12","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"PWM","color":"red"},{"label":"PCINT21","color":"white"},{"label":"T1","color":"white"},{"label":"5","color":"pink"},{"label":"PD5","color":"yellow"},{"label":"11","color":"gray"}]'></div> 
+          <div class="pin digital" data-tags='[{"label":"XCK","color":"white"},{"label":"PCINT20","color":"white"},{"label":"T0","color":"white"},{"label":"4","color":"pink"},{"label":"PD4","color":"yellow"},{"label":"6","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"OC2B","color":"white"},{"label":"PWM","color":"red"},{"label":"PCINT19","color":"white"},{"label":"INT1","color":"white"},{"label":"3","color":"pink"},{"label":"PD3","color":"yellow"},{"label":"5","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"PCINT18","color":"white"},{"label":"INT0","color":"white"},{"label":"2","color":"pink"},{"label":"PD2","color":"yellow"},{"label":"4","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"TX","color":"blue"},{"label":"PCINT17","color":"white"},{"label":"TXD","color":"blue"},{"label":"1","color":"pink"},{"label":"PD1","color":"yellow"},{"label":"3","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"RX","color":"blue"},{"label":"PCINT16","color":"white"},{"label":"RXD","color":"blue"},{"label":"0","color":"pink"},{"label":"PD0","color":"yellow"},{"label":"2","color":"gray"}]'></div>
+        </div>
+
+        <div class="hotspot lower-pins">
+          <div class="pin digital" data-tags='[{"label":"NC","color":"gray"},{"label":"Not Connected","color":"white"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"IOREF","color":"gray"}]'></div>
+          <div class="pin digital" data-tags='[{"label":"RESET","color":"white"},{"label":"PCINT14","color":"white"},{"label":"PC6","color":"yellow"},{"label":"1","color":"gray"}]'></div>
+          <div class="pin power" data-tags='[{"label":"3.3V Power","color":"red"}]'></div>
+          <div class="pin power" data-tags='[{"label":"5V Power","color":"red"}]'></div>
+          <div class="pin power" data-tags='[{"label":"GND","color":"black"}]'></div>
+          <div class="pin power" data-tags='[{"label":"GND","color":"black"}]'></div>
+          <div class="pin power" data-tags='[{"label":"VIN","color":"red"}]'></div>
+          <div class="gap2"></div>
+          <div class="pin analog" data-tags='[{"label":"ADC0","color":"green"},{"label":"PCINT8","color":"white"},{"label":"A0","color":"green"},{"label":"PC0","color":"yellow"},{"label":"23","color":"gray"}]'></div>
+          <div class="pin analog" data-tags='[{"label":"ADC1","color":"green"},{"label":"PCINT9","color":"white"},{"label":"A1","color":"green"},{"label":"PC1","color":"yellow"},{"label":"24","color":"gray"}]'></div> 
+          <div class="pin analog" data-tags='[{"label":"ADC2","color":"green"},{"label":"PCINT10","color":"white"},{"label":"A2","color":"green"},{"label":"PC2","color":"yellow"},{"label":"25","color":"gray"}]'></div>
+          <div class="pin analog" data-tags='[{"label":"ADC3","color":"green"},{"label":"PCINT11","color":"white"},{"label":"A3","color":"green"},{"label":"PC3","color":"yellow"},{"label":"26","color":"gray"}]'></div>
+          <div class="pin analog" data-tags='[{"label":"SDA","color":"blue"},{"label":"ADC4","color":"green"},{"label":"PCINT12","color":"white"},{"label":"A4","color":"green"},{"label":"PC4","color":"yellow"},{"label":"27","color":"gray"}]'></div>
+          <div class="pin analog" data-tags='[{"label":"SCL","color":"blue"},{"label":"ADC5","color":"green"},{"label":"PCINT13","color":"white"},{"label":"A5","color":"green"},{"label":"PC5","color":"yellow"},{"label":"28","color":"gray"}]'></div>
+        </div>
+
+        <!-- ATmega16U2 USB controller chip -->
+        <div class="hotspot atmega16u2" data-tags='[{"label":"ATmega16U2","color":"gray"},{"label":"USB-to-Serial MCU","color":"blue"}]'></div>
+
+        <!-- TX / RX LEDs -->
+        <div class="hotspot tx-led" data-tags='[{"label":"TX LED","color":"yellow"},{"label":"Transmit Indicator","color":"white"}]'></div>
+        <div class="hotspot rx-led" data-tags='[{"label":"RX LED","color":"yellow"},{"label":"Receive Indicator","color":"white"}]'></div>
+
+        <!-- ATmega328P main MCU -->
+        <div class="hotspot atmega328p" data-tags='[{"label":"ATmega328P-PU","color":"gray"},{"label":"Main MCU","color":"blue"}]'></div>
+
+        <!-- 16 MHz crystal oscillator -->
+        <div class="hotspot crystal" data-tags='[{"label":"16.000 MHz","color":"white"},{"label":"Crystal Oscillator","color":"gray"}]'></div>
+
+        <!-- Power jack (barrel connector) -->
+        <div class="hotspot power-jack" data-tags='[{"label":"DC Barrel Jack","color":"gray"},{"label":"7V - 12V Input","color":"red"}]'></div>
+
+        <!-- ON power LED -->
+        <div class="hotspot led-on" data-tags='[{"label":"ON LED","color":"green"},{"label":"Power Indicator","color":"white"}]'></div>
+
+        <!-- L LED (pin 13) -->
+        <div class="hotspot led-l" data-tags='[{"label":"L LED","color":"pink"},{"label":"Connected to D13","color":"white"}]'></div>
+
+        <!-- ICSP header top (for ATmega16U2) -->
+        <div class="hotspot icsp-top" data-tags='[{"label":"ICSP Header","color":"gray"},{"label":"16U2 Programming","color":"white"}]'></div>
+
+        <!-- ICSP header bottom (for ATmega328P / SPI) -->
+        <div class="hotspot icsp-bottom" data-tags='[{"label":"ICSP Header","color":"gray"},{"label":"SPI / 328P Prog","color":"white"}]'></div>
+
+        <!-- Reset button (right side) -->
+        <div class="hotspot reset-right" data-tags='[{"label":"Reset Header/Pins","color":"red"}]'></div>
+
+      </div>
+    </div>
+
+    <div class="details">
+      
+    </div>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>

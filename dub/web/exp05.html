@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Exp 05 — Ultrasonic Sensor | IoT Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp04.html">← Exp 04</a>
+  <div class="nav-exp-id">Exp 05 / 10</div>
+  <a href="exp06.html">Exp 06 →</a>
+</nav>
+<header class="exp-header">
+  <div class="exp-badge">Experiment 05</div>
+  <h1>Ultrasonic Sensor<br>Handling with Arduino</h1>
+  <p class="exp-subtitle">Measure distance with HC-SR04 using pulseIn(). Implement danger/caution/safe zones with LEDs and non-blocking buzzer alerts.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 HC-SR04 · pulseIn · Sound Speed</span>
+    <span class="meta-pill diff-intermediate">Intermediate</span>
+    <span class="meta-pill">TRIG=9 · ECHO=10</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+<section class="section">
+  <h2 class="section-title">⚡ How HC-SR04 Works</h2>
+  <div class="flow-diagram">
+    <div class="flow-node" style="--nc:#4f8ef7">
+      <div class="fn-title">1. Trigger Pulse</div>
+      <div class="fn-desc">Send 10μs HIGH on TRIG pin → sensor emits 8× 40kHz ultrasonic bursts</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="--nc:#f59e0b">
+      <div class="fn-title">2. Sound Travels</div>
+      <div class="fn-desc">Sound wave travels to object and reflects back toward sensor</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="--nc:#22c55e">
+      <div class="fn-title">3. Echo Pulse</div>
+      <div class="fn-desc">ECHO pin goes HIGH for duration = round-trip travel time</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node" style="--nc:#ec4899">
+      <div class="fn-title">4. Calculate</div>
+      <div class="fn-desc">distance = (duration × 0.0343) ÷ 2<br>(speed of sound ≈ 343 m/s)</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution — Basic Distance Measurement</h2>
+  <div class="solution-banner simple">⭐ Start Here — single reading per loop, print to Serial Monitor. Just TRIG + ECHO pins.</div>
+  <!-- Simple Sim -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <div style="flex:1;min-width:150px">
+        <label style="font-size:12px;color:var(--text2);display:block;margin-bottom:8px">Target Distance</label>
+        <input type="range" id="sim5Slider" min="2" max="400" value="150" style="width:100%" oninput="document.getElementById('sim5Val').textContent=this.value">
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;text-align:right"><span id="sim5Val">150</span> cm</div>
+      </div>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Serial Monitor</div>
+        <div id="sim5Serial" style="background:#0c111d;border-radius:6px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);height:80px;overflow-y:auto;border:1px solid var(--border)"></div>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <span style="font-size:11px;color:var(--text3)">Simulates basic <code>pulseIn()</code> and <code>delay(500)</code> reading loop</span>
+    </div>
+  </div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">simple.ino — Exp 05 (Beginner)</span><button class="copy-btn" onclick="copyCode('code05s')">Copy</button></div>
+    <pre class="code-block" id="code05s"><span class="cm">// Simple HC-SR04 Distance Measurement
+// TRIG=9, ECHO=10</span>
+
+<span class="ck">const int</span> TRIG=9, ECHO=10;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);
+  pinMode(TRIG, OUTPUT);
+  pinMode(ECHO, INPUT);
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="cm">// Send 10µs trigger pulse</span>
+  digitalWrite(TRIG, LOW);  delayMicroseconds(<span class="cn">2</span>);
+  digitalWrite(TRIG, HIGH); delayMicroseconds(<span class="cn">10</span>);
+  digitalWrite(TRIG, LOW);
+
+  <span class="cm">// Measure echo pulse width</span>
+  <span class="ck">long</span> duration = pulseIn(ECHO, HIGH);
+
+  <span class="cm">// Convert to cm: speed of sound = 0.0343 cm/µs, divide by 2 (round trip)</span>
+  <span class="ck">float</span> distance = (duration * <span class="cn">0.0343</span>) / <span class="cn">2</span>;
+
+  Serial.print(<span class="cs">"Distance: "</span>);
+  Serial.print(distance);
+  Serial.println(<span class="cs">" cm"</span>);
+
+  delay(<span class="cn">500</span>); <span class="cm">// Wait before next reading</span>
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📡 Distance Simulator</h2>
+  <div class="sim-frame">
+    <div style="padding:20px 16px">
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+        <div style="flex:1;min-width:200px">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <label style="font-size:12px;color:var(--text2);min-width:80px">Distance</label>
+            <input type="range" id="distSlider" min="0" max="100" value="55" style="flex:1" oninput="updateDist()">
+            <span id="distVal" style="font-size:14px;font-weight:600;color:var(--accent);min-width:60px;font-family:JetBrains Mono,monospace">55 cm</span>
+          </div>
+        </div>
+      </div>
+      <!-- Visualizer -->
+      <canvas id="sonarCanvas" width="600" height="160" style="width:100%;border-radius:8px;background:#0c111d"></canvas>
+    </div>
+    <div style="display:flex;gap:12px;padding:12px 16px;border-top:1px solid var(--border);flex-wrap:wrap">
+      <div id="zoneGreen" style="flex:1;padding:10px;border-radius:8px;background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2);text-align:center">
+        <div style="font-size:11px;font-weight:600;color:var(--green)">✅ SAFE</div>
+        <div style="font-size:10px;color:var(--text2)">&gt; 40 cm</div>
+      </div>
+      <div id="zoneYellow" style="flex:1;padding:10px;border-radius:8px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);text-align:center">
+        <div style="font-size:11px;font-weight:600;color:var(--amber)">⚠️ CAUTION</div>
+        <div style="font-size:10px;color:var(--text2)">20–40 cm</div>
+      </div>
+      <div id="zoneRed" style="flex:1;padding:10px;border-radius:8px;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);text-align:center">
+        <div style="font-size:11px;font-weight:600;color:var(--red)">🚨 DANGER</div>
+        <div style="font-size:10px;color:var(--text2)">&lt; 20 cm</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">💾 Advanced Solution — Averaging + Zones + Non-blocking Buzzer</h2>
+  <div class="solution-banner advanced">🚀 Advanced — 5-sample averaging, danger/caution/safe LED zones, non-blocking buzzer alerts.</div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">program.ino — Exp 05</span><button class="copy-btn" onclick="copyCode('code05')">Copy</button></div>
+    <pre class="code-block" id="code05"><span class="cm">// Exp 05 — HC-SR04 Ultrasonic Sensor
+// TRIG=9, ECHO=10, Green=4, Yellow=5, Red=6, Buzzer=7</span>
+
+<span class="ck">const int</span> TRIG=9,ECHO=10,GREEN_LED=4,YELLOW_LED=5,RED_LED=6,BUZZ=7;
+<span class="ck">const int</span> DANGER_CM=20, CAUTION_CM=40;
+
+<span class="ck">unsigned long</span> lastBuzzToggle=0;
+<span class="ck">bool</span> buzzState=<span class="cn">false</span>;
+<span class="ck">int</span> buzzInterval=0;
+
+<span class="cm">// Get raw distance in cm (returns -1 on timeout)</span>
+<span class="ck">long</span> <span class="cf">getRaw</span>(){
+  digitalWrite(TRIG,LOW); delayMicroseconds(<span class="cn">2</span>);
+  digitalWrite(TRIG,HIGH); delayMicroseconds(<span class="cn">10</span>);
+  digitalWrite(TRIG,LOW);
+  <span class="ck">long</span> dur=pulseIn(ECHO,HIGH,<span class="cn">25000</span>);
+  <span class="ck">return</span> dur==0 ? -1 : (dur*<span class="cn">0.0343</span>)/2;
+}
+
+<span class="cm">// Average of 5 readings for stability</span>
+<span class="ck">long</span> <span class="cf">getDistance</span>(){
+  <span class="ck">long</span> sum=0; <span class="ck">int</span> valid=0;
+  <span class="ck">for</span>(<span class="ck">int</span> i=0;i&lt;5;i++){
+    <span class="ck">long</span> d=getRaw();
+    <span class="ck">if</span>(d&gt;0 &amp;&amp; d&lt;=400){sum+=d;valid++;}
+    delay(<span class="cn">15</span>);
+  }
+  <span class="ck">return</span> valid&gt;0 ? sum/valid : -1;
+}
+
+<span class="ck">void</span> <span class="cf">allLedsOff</span>(){
+  digitalWrite(GREEN_LED,LOW);digitalWrite(YELLOW_LED,LOW);digitalWrite(RED_LED,LOW);
+}
+
+<span class="ck">void</span> <span class="cf">updateAlerts</span>(<span class="ck">long</span> dist){
+  allLedsOff();
+  <span class="ck">if</span>(dist&lt;DANGER_CM){
+    digitalWrite(RED_LED,HIGH); buzzInterval=100;
+    Serial.print(F(<span class="cs">"[DANGER] "</span>));
+  } <span class="ck">else if</span>(dist&lt;CAUTION_CM){
+    digitalWrite(YELLOW_LED,HIGH); buzzInterval=400;
+    Serial.print(F(<span class="cs">"[CAUTION] "</span>));
+  } <span class="ck">else</span> {
+    digitalWrite(GREEN_LED,HIGH); buzzInterval=0;
+    digitalWrite(BUZZ,LOW);
+    Serial.print(F(<span class="cs">"[SAFE] "</span>));
+  }
+  Serial.print(dist); Serial.println(F(<span class="cs">" cm"</span>));
+}
+
+<span class="cm">// Non-blocking buzzer beeper</span>
+<span class="ck">void</span> <span class="cf">updateBuzzer</span>(){
+  <span class="ck">if</span>(buzzInterval==0)return;
+  <span class="ck">unsigned long</span> now=millis();
+  <span class="ck">if</span>(now-lastBuzzToggle&gt;=(unsigned long)buzzInterval){
+    lastBuzzToggle=now; buzzState=!buzzState;
+    digitalWrite(BUZZ,buzzState?HIGH:LOW);
+  }
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">9600</span>);
+  pinMode(TRIG,OUTPUT); pinMode(ECHO,INPUT);
+  pinMode(GREEN_LED,OUTPUT); pinMode(YELLOW_LED,OUTPUT);
+  pinMode(RED_LED,OUTPUT); pinMode(BUZZ,OUTPUT);
+  allLedsOff(); digitalWrite(BUZZ,LOW);
+  Serial.println(F(<span class="cs">"=== HC-SR04 Distance Sensor ==="</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  <span class="ck">long</span> dist=getDistance();
+  <span class="ck">if</span>(dist&lt;0){Serial.println(F(<span class="cs">"[--] Out of range"</span>));allLedsOff();buzzInterval=0;}
+  <span class="ck">else</span> updateAlerts(dist);
+  updateBuzzer(); delay(<span class="cn">50</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📊 Program Flowchart</h2>
+  <div class="flowchart">
+    <div class="fc-start">START</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">setup() — configure all pins, Serial.begin</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-loop-label">loop()</div>
+    <div class="fc-loop-body">
+      <div class="fc-box">getDistance() → average 5 samples</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-diamond">dist &lt; 0? (timeout)</div>
+      <div class="fc-branch">
+        <div class="fc-branch-yes"><div class="fc-mini" style="color:var(--red)">YES</div><div class="fc-box-sm">All LEDs off<br>buzzInterval=0</div></div>
+        <div class="fc-branch-no"><div class="fc-mini" style="color:var(--green)">NO</div><div class="fc-box-sm">updateAlerts(dist)</div></div>
+      </div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box">updateBuzzer() — non-blocking beep</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box">delay(50)</div>
+    </div>
+    <div class="fc-arrow-back">↑ repeat</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📝 Notes & Extras</h2>
+  <div class="notes-grid">
+    <div class="note-card note-info">
+      <div class="note-title">💡 Speed of Sound Formula</div>
+      <div class="note-body"><code>distance = (duration_µs × 0.0343) / 2</code><br>Sound travels at ≈343 m/s = 0.0343 cm/µs. Divide by 2 because <code>pulseIn()</code> measures the round-trip (to object AND back). HC-SR04 range: 2–400 cm, beam angle: ~15°.</div>
+    </div>
+    <div class="note-card note-warn">
+      <div class="note-title">⚠️ Sensor Noise & Averaging</div>
+      <div class="note-body">Single readings can spike due to reflections or interference. Averaging 5 consecutive readings smooths noise significantly. Add a timeout (<code>pulseIn(pin, HIGH, 25000)</code>) so the sketch doesn't hang if no echo returns (out of range).</div>
+    </div>
+    <div class="note-card note-tip">
+      <div class="note-title">🔧 Non-Blocking Buzzer</div>
+      <div class="note-body">Instead of <code>tone()/delay()</code> which block the CPU, track <code>lastBuzzToggle</code> and toggle the buzzer pin when enough time has passed. This lets the sensor still take readings while the buzzer beeps — crucial for real-time responsiveness.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">📐 HC-SR04 Pinout</div>
+      <div class="note-body"><strong>VCC</strong> → 5V &nbsp;|&nbsp; <strong>GND</strong> → GND<br><strong>TRIG</strong> → Digital output (send 10μs pulse)<br><strong>ECHO</strong> → Digital input (read pulse width)<br>Do NOT connect ECHO directly to 5V logic if using 3.3V boards — use a voltage divider.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔧 Key Functions</h2>
+  <div class="func-list">
+    <div class="func-item"><code class="func-sig">pulseIn(pin, value, timeout)</code><div class="func-desc">Measures the duration (µs) of a pulse on a pin. Waits for the pin to go to <code>value</code> (HIGH), then times how long it stays there. <code>timeout</code> (µs) prevents infinite hang.</div></div>
+    <div class="func-item"><code class="func-sig">delayMicroseconds(us)</code><div class="func-desc">Pause for the specified number of microseconds. Used to generate the precise 10μs TRIG pulse required by HC-SR04.</div></div>
+    <div class="func-item"><code class="func-sig">getRaw() / getDistance()</code><div class="func-desc">Custom functions: getRaw() gets one sample, getDistance() averages 5 valid samples for noise rejection. Returns -1 if no valid reading.</div></div>
+    <div class="func-item"><code class="func-sig">updateBuzzer()</code><div class="func-desc">Non-blocking buzzer manager — checks millis() to toggle pin at the right interval without using delay().</div></div>
+  </div>
+</section>
+
+</main>
+<footer class="exp-footer">
+  <a href="exp04.html">← Exp 04</a>
+  <span>Exp 05 of 10 · Ultrasonic Sensor</span>
+  <a href="exp06.html">Exp 06 →</a>
+</footer>
+<script src="shared.js"></script>
+<script>
+const sonar = document.getElementById('sonarCanvas');
+const {ctx:sctx,W:sW,H:sH} = hiDPI(sonar);
+let dist = 55;
+
+function updateDist(){
+  dist = +document.getElementById('distSlider').value;
+  document.getElementById('distVal').textContent = dist + ' cm';
+  drawSonar();
+  // Zone highlight
+  document.getElementById('zoneGreen').style.opacity = dist >= 40 ? 1 : 0.4;
+  document.getElementById('zoneYellow').style.opacity = (dist >= 20 && dist < 40) ? 1 : 0.4;
+  document.getElementById('zoneRed').style.opacity = dist < 20 ? 1 : 0.4;
+}
+
+function drawSonar(){
+  const W=sW, H=sH;
+  sctx.clearRect(0,0,W,H);
+  sctx.fillStyle='#0c111d'; sctx.fillRect(0,0,W,H);
+
+  // Grid lines
+  sctx.strokeStyle='rgba(255,255,255,0.05)'; sctx.lineWidth=1;
+  for(let x=0;x<W;x+=40){ sctx.beginPath();sctx.moveTo(x,0);sctx.lineTo(x,H);sctx.stroke(); }
+
+  // Zone backgrounds
+  const maxCm = 100, px = (cm) => (cm/maxCm)*(W-60)+30;
+  sctx.fillStyle='rgba(239,68,68,0.08)'; sctx.fillRect(px(0),0,px(20)-px(0),H);
+  sctx.fillStyle='rgba(245,158,11,0.06)'; sctx.fillRect(px(20),0,px(40)-px(20),H);
+  sctx.fillStyle='rgba(34,197,94,0.05)'; sctx.fillRect(px(40),0,W-px(40),H);
+
+  // Zone labels
+  sctx.font='10px Inter,sans-serif'; sctx.textAlign='center';
+  sctx.fillStyle='rgba(239,68,68,0.7)'; sctx.fillText('DANGER',px(10),14);
+  sctx.fillStyle='rgba(245,158,11,0.7)'; sctx.fillText('CAUTION',px(30),14);
+  sctx.fillStyle='rgba(34,197,94,0.7)'; sctx.fillText('SAFE',px(65),14);
+
+  // Sensor
+  const sx = 30;
+  sctx.fillStyle='#4f8ef7'; sctx.fillRect(sx-12,H/2-18,24,36);
+  sctx.fillStyle='rgba(79,142,247,0.2)'; sctx.fillRect(sx-12,H/2-18,24,36);
+  sctx.font='9px Inter,sans-serif'; sctx.textAlign='center';
+  sctx.fillStyle='#4f8ef7'; sctx.fillText('HC-SR04',sx,H/2+32);
+
+  // Pulse wave
+  const objX = px(dist);
+  const color = dist<20?'#ef4444':dist<40?'#f59e0b':'#22c55e';
+  sctx.strokeStyle=color; sctx.lineWidth=2;
+  sctx.setLineDash([6,4]);
+  sctx.beginPath(); sctx.moveTo(sx+12,H/2); sctx.lineTo(objX,H/2); sctx.stroke();
+  sctx.setLineDash([]);
+
+  // Object
+  sctx.fillStyle=color+'33'; sctx.fillRect(objX-6,H/2-30,12,60);
+  sctx.strokeStyle=color; sctx.lineWidth=1.5; sctx.strokeRect(objX-6,H/2-30,12,60);
+  sctx.font='bold 11px JetBrains Mono,monospace'; sctx.textAlign='center';
+  sctx.fillStyle=color; sctx.fillText(dist+'cm',objX,H/2+48);
+
+  // Ticks
+  sctx.fillStyle='rgba(255,255,255,0.3)'; sctx.font='9px Inter';
+  [0,20,40,60,80,100].forEach(cm=>{
+    sctx.fillText(cm+'cm',px(cm),H-4);
+  });
+}
+// }
+updateDist();
+
+// ── Simple Sim Logic ──
+(function(){
+  const serial = document.getElementById('sim5Serial');
+  const slider = document.getElementById('sim5Slider');
+  if(!serial || !slider) return;
+  
+  setInterval(()=>{
+    const val = slider.value;
+    const msg = `Distance: ${val}.00 cm\n`;
+    serial.textContent += msg;
+    serial.scrollTop = serial.scrollHeight;
+    
+    // Keep log from getting too long
+    if (serial.textContent.length > 1000) {
+      serial.textContent = serial.textContent.substring(serial.textContent.length - 800);
+    }
+  }, 500);
+})();
+</script>
+<style>
+</style>
+</body>
+</html>

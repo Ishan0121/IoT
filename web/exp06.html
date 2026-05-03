@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Exp 06 — Servo & Stepper | IoT Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp05.html">← Exp 05</a>
+  <div class="nav-exp-id">Exp 06 / 10</div>
+  <a href="exp07.html">Exp 07 →</a>
+</nav>
+<header class="exp-header">
+  <div class="exp-badge">Experiment 06</div>
+  <h1>Servo Motor & Stepper<br>Motor Handling</h1>
+  <p class="exp-subtitle">Control SG90 servo (sweep + pot control) and 28BYJ-48 stepper with ULN2003 driver. Understand PWM pulses vs step sequences.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 Servo.h · Stepper.h · SG90 · 28BYJ-48</span>
+    <span class="meta-pill diff-intermediate">Intermediate</span>
+    <span class="meta-pill">Pin 9 (Servo)</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution — Basic Servo Sweep &amp; Stepper Step</h2>
+  <div class="solution-banner simple">⭐ Start Here — sweep servo 0→180→ 0, step stepper one full revolution. Minimal code, no helper functions.</div>
+  <!-- Simple Sim -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px;display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <!-- Auto Sweep Servo -->
+      <div style="flex:1;min-width:180px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">Auto-Sweep Servo</div>
+        <canvas id="sim6ServoCanvas" width="160" height="160" style="border-radius:8px;background:#0c111d"></canvas>
+      </div>
+      <!-- Auto Step Stepper -->
+      <div style="flex:1;min-width:180px;text-align:center">
+        <div style="font-size:11px;color:var(--text2);margin-bottom:8px">Auto-Step Stepper</div>
+        <canvas id="sim6StepperCanvas" width="160" height="160" style="border-radius:8px;background:#0c111d"></canvas>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <span style="font-size:11px;color:var(--text3)">Simulates basic <code>Servo.write()</code> loop and <code>Stepper.step(2048)</code></span>
+    </div>
+  </div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">simple.ino — Exp 06 Servo (Beginner)</span><button class="copy-btn" onclick="copyCode('code06s')">Copy</button></div>
+    <pre class="code-block" id="code06s"><span class="cm">// Simple Servo Sweep
+// Circuit: Servo signal wire → Pin 9</span>
+
+<span class="cp">#include</span> &lt;Servo.h&gt;
+
+Servo myServo;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  myServo.attach(<span class="cn">9</span>);  <span class="cm">// Connect servo to Pin 9</span>
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="cm">// Sweep from 0 to 180 degrees</span>
+  <span class="ck">for</span>(<span class="ck">int</span> angle=0; angle&lt;=180; angle++) {
+    myServo.write(angle);
+    delay(<span class="cn">15</span>);
+  }
+  <span class="cm">// Sweep back from 180 to 0</span>
+  <span class="ck">for</span>(<span class="ck">int</span> angle=180; angle&gt;=0; angle--) {
+    myServo.write(angle);
+    delay(<span class="cn">15</span>);
+  }
+}
+
+<span class="cm">// ─────────────────────────────────────────────
+// Simple Stepper (28BYJ-48 via ULN2003)
+// IN1=8, IN3=10, IN2=9, IN4=11</span>
+<span class="cm">/*
+#include &lt;Stepper.h&gt;
+Stepper myStepper(2048, 8, 10, 9, 11);
+void setup() { myStepper.setSpeed(10); }
+void loop()  { myStepper.step(2048); delay(1000);
+               myStepper.step(-2048); delay(1000); }
+*/</span></pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">⚙️ Servo Motor Simulator</h2>
+  <div class="sim-frame">
+    <div style="padding:20px 16px;display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <canvas id="servoCanvas" width="200" height="200" style="flex-shrink:0;border-radius:8px;background:#0c111d"></canvas>
+      <div style="flex:1;min-width:200px">
+        <div style="margin-bottom:12px">
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Angle: <span id="angleDisplay" style="color:var(--accent)">90°</span></div>
+          <input type="range" id="servoSlider" min="0" max="180" value="90" style="width:100%" oninput="setServoAngle(+this.value)">
+          <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:2px"><span>0°</span><span>90°</span><span>180°</span></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="sim-btn" onclick="sweepServo()">↔ Auto Sweep</button>
+          <button class="sim-btn" onclick="setServoAngle(0)">0°</button>
+          <button class="sim-btn" onclick="setServoAngle(90)">90°</button>
+          <button class="sim-btn" onclick="setServoAngle(180)">180°</button>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text2)">
+          PWM pulse width: <span id="pwmWidth" style="color:var(--green);font-family:JetBrains Mono,monospace">1500 µs</span><br>
+          <span style="font-size:11px">0°=544µs · 90°=1500µs · 180°=2400µs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔄 Stepper Motor Simulator</h2>
+  <div class="sim-frame">
+    <div style="padding:20px 16px;display:flex;gap:24px;align-items:center;flex-wrap:wrap">
+      <canvas id="stepperCanvas" width="200" height="200" style="flex-shrink:0;border-radius:8px;background:#0c111d"></canvas>
+      <div style="flex:1;min-width:200px">
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px">28BYJ-48 — 2048 steps/rev at 10 RPM</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+          <button class="sim-btn" onclick="stepperRotate(360,1)">↻ Full CW</button>
+          <button class="sim-btn" onclick="stepperRotate(360,-1)">↺ Full CCW</button>
+          <button class="sim-btn" onclick="stepperRotate(90,1)">90° CW</button>
+          <button class="sim-btn" onclick="stepperRotate(90,-1)">90° CCW</button>
+        </div>
+        <div style="font-size:12px;color:var(--text2)">
+          Current position: <span id="stepperAngle" style="color:var(--pink);font-family:JetBrains Mono,monospace">0°</span><br>
+          Step sequence: <span id="stepSeq" style="color:var(--amber);font-family:JetBrains Mono,monospace">IN1-IN2-IN3-IN4</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">💾 Advanced Solution — Pot Control + Smooth Move</h2>
+  <div class="solution-banner advanced">🚀 Advanced — potentiometer-driven angle, smooth <code>moveTo()</code> function, dead-band jitter prevention.</div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">program.ino — Servo (Part A)</span><button class="copy-btn" onclick="copyCode('code06a')">Copy</button></div>
+    <pre class="code-block" id="code06a"><span class="cp">#include</span> &lt;Servo.h&gt;
+
+<span class="ck">const int</span> SERVO_PIN=9, POT_PIN=A0;
+Servo myServo;
+<span class="ck">int</span> currentAngle=90;
+
+<span class="cm">// Smooth move to target angle</span>
+<span class="ck">void</span> <span class="cf">moveTo</span>(<span class="ck">int</span> target, <span class="ck">int</span> stepDelay=15){
+  <span class="ck">int</span> step=(target&gt;currentAngle)?1:-1;
+  <span class="ck">while</span>(currentAngle!=target){
+    currentAngle+=step;
+    myServo.write(currentAngle);
+    Serial.println(currentAngle);
+    delay(stepDelay);
+  }
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">9600</span>);
+  myServo.attach(SERVO_PIN);
+  myServo.write(<span class="cn">90</span>); delay(<span class="cn">500</span>);
+  Serial.println(F(<span class="cs">"=== Servo Motor Control ==="</span>));
+  <span class="cm">// Auto sweep for first 5 seconds</span>
+  moveTo(<span class="cn">180</span>,10); moveTo(<span class="cn">0</span>,10);
+  Serial.println(F(<span class="cs">"Sweep done. Now using Potentiometer."</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  <span class="cm">// Pot controls angle in real-time</span>
+  <span class="ck">int</span> potVal=analogRead(POT_PIN);
+  <span class="ck">int</span> target=map(potVal,<span class="cn">0</span>,<span class="cn">1023</span>,<span class="cn">0</span>,<span class="cn">180</span>);
+  <span class="ck">if</span>(abs(target-currentAngle)&gt;2){
+    myServo.write(target); currentAngle=target;
+    Serial.print(F(<span class="cs">"Angle: "</span>)); Serial.println(target);
+  }
+  delay(<span class="cn">50</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">💾 Program — Part B: Stepper</h2>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">program.ino — Stepper (Part B)</span><button class="copy-btn" onclick="copyCode('code06b')">Copy</button></div>
+    <pre class="code-block" id="code06b"><span class="cp">#include</span> &lt;Stepper.h&gt;
+
+<span class="ck">const int</span> STEPS_PER_REV=2048;
+<span class="cm">// IN1=8,IN3=10,IN2=9,IN4=11 (pin ORDER matters!)</span>
+Stepper myStepper(STEPS_PER_REV,8,10,9,11);
+
+<span class="ck">void</span> <span class="cf">rotateDeg</span>(<span class="ck">float</span> degrees, <span class="ck">bool</span> cw){
+  <span class="ck">long</span> steps=(degrees/360.0)*STEPS_PER_REV;
+  <span class="ck">if</span>(!cw) steps=-steps;
+  Serial.print(cw?F(<span class="cs">"CW  "</span>):F(<span class="cs">"CCW "</span>));
+  Serial.print(abs(degrees)); Serial.println(F(<span class="cs">"°"</span>));
+  myStepper.step(steps);
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">9600</span>);
+  myStepper.setSpeed(<span class="cn">10</span>); <span class="cm">// 10 RPM</span>
+  Serial.println(F(<span class="cs">"=== 28BYJ-48 Stepper ==="</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  rotateDeg(<span class="cn">360</span>,true); delay(<span class="cn">1000</span>);
+  rotateDeg(<span class="cn">90</span>,false); delay(<span class="cn">500</span>);
+  rotateDeg(<span class="cn">180</span>,true); delay(<span class="cn">500</span>);
+  rotateDeg(<span class="cn">90</span>,false); delay(<span class="cn">1000</span>);
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📊 Flowchart — Servo Program</h2>
+  <div class="flowchart">
+    <div class="fc-start">START</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">setup() — attach servo · write(90) · auto sweep 0→180→0</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-loop-label">loop()</div>
+    <div class="fc-loop-body">
+      <div class="fc-box">analogRead(A0) → potVal (0–1023)</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box">map(potVal, 0,1023, 0,180) → target angle</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-diamond">|target - currentAngle| &gt; 2?</div>
+      <div class="fc-branch">
+        <div class="fc-branch-yes"><div class="fc-mini" style="color:var(--green)">YES</div><div class="fc-box-sm">myServo.write(target)<br>Serial.println(target)</div></div>
+        <div class="fc-branch-no"><div class="fc-mini" style="color:var(--red)">NO</div><div class="fc-box-sm">Skip (dead-band<br>prevents jitter)</div></div>
+      </div>
+    </div>
+    <div class="fc-arrow-back">↑ repeat</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📝 Notes & Extras</h2>
+  <div class="notes-grid">
+    <div class="note-card note-info">
+      <div class="note-title">💡 How Servo PWM Works</div>
+      <div class="note-body">SG90 servo reads a 50Hz PWM signal (20ms period). Pulse width sets angle: <strong>544µs=0°, 1500µs=90°, 2400µs=180°</strong>. The <code>Servo.h</code> library handles all timing — just call <code>myServo.write(0–180)</code>.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">🔄 Stepper Step Sequence</div>
+      <div class="note-body">28BYJ-48 is a 4-phase unipolar stepper. The ULN2003 driver energizes coils in sequence: <strong>1000 → 1100 → 0100 → 0110 → 0001 → ...</strong> (half-step). 2048 steps = 1 full revolution. The pin ORDER in Stepper() constructor is critical: IN1, IN3, IN2, IN4.</div>
+    </div>
+    <div class="note-card note-warn">
+      <div class="note-title">⚠️ Servo Power Warning</div>
+      <div class="note-body">Do NOT power a servo directly from the Arduino 5V pin if it's under load — it can draw 500mA+ causing brownouts and resets. Power the servo from an external 5V supply (share GND with Arduino). The signal wire alone goes to Pin 9.</div>
+    </div>
+    <div class="note-card note-tip">
+      <div class="note-title">📐 map() Function</div>
+      <div class="note-body"><code>map(value, inMin, inMax, outMin, outMax)</code> linearly maps a value from one range to another. Potentiometer gives 0–1023; servo needs 0–180. The dead-band check (<code>abs(target-current)&gt;2</code>) prevents servo jitter from ADC noise.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔧 Key Functions</h2>
+  <div class="func-list">
+    <div class="func-item"><code class="func-sig">myServo.attach(pin)</code><div class="func-desc">Attach the Servo object to a PWM pin. Starts generating the 50Hz PWM signal on that pin.</div></div>
+    <div class="func-item"><code class="func-sig">myServo.write(angle)</code><div class="func-desc">Move servo to angle 0–180°. Library translates to appropriate pulse width (544–2400µs).</div></div>
+    <div class="func-item"><code class="func-sig">myStepper.setSpeed(rpm)</code><div class="func-desc">Set stepper speed in RPM. For 28BYJ-48: 1–15 RPM is practical. Higher speeds lose torque.</div></div>
+    <div class="func-item"><code class="func-sig">myStepper.step(steps)</code><div class="func-desc">Rotate a number of steps. Positive = CW, negative = CCW. Blocking call — motor must finish before loop continues.</div></div>
+    <div class="func-item"><code class="func-sig">map(val, iMin, iMax, oMin, oMax)</code><div class="func-desc">Linearly re-maps a value from input range to output range. Essential for converting potentiometer 0–1023 to servo 0–180°.</div></div>
+  </div>
+</section>
+
+</main>
+<footer class="exp-footer">
+  <a href="exp05.html">← Exp 05</a>
+  <span>Exp 06 of 10 · Servo &amp; Stepper</span>
+  <a href="exp07.html">Exp 07 →</a>
+</footer>
+<script src="shared.js"></script>
+<script>
+// Servo canvas
+const sc = document.getElementById('servoCanvas');
+const {ctx:sctx,W:scW,H:scH} = hiDPI(sc);
+let servoAngle = 90;
+let sweepInterval = null;
+
+function drawServo(angle){
+  const W=scW,H=scH,cx=W/2,cy=H*0.65;
+  sctx.clearRect(0,0,W,H);
+  sctx.fillStyle='#0c111d';sctx.fillRect(0,0,W,H);
+  // Body
+  sctx.fillStyle='#1e3a5f';roundRect(sctx,60,100,80,70,8);sctx.fill();
+  sctx.strokeStyle='#4f8ef7';sctx.lineWidth=1.5;sctx.stroke();
+  // Horn
+  const rad=(angle-90)*Math.PI/180;
+  const len=55;
+  sctx.strokeStyle='#22c55e';sctx.lineWidth=5;sctx.lineCap='round';
+  sctx.beginPath();sctx.moveTo(cx,cy);
+  sctx.lineTo(cx+Math.cos(rad)*len,cy+Math.sin(rad)*len);
+  sctx.stroke();
+  // Center dot
+  sctx.fillStyle='#4f8ef7';sctx.beginPath();sctx.arc(cx,cy,7,0,Math.PI*2);sctx.fill();
+  // Label
+  sctx.font='bold 16px Inter,sans-serif';sctx.textAlign='center';sctx.fillStyle='#e8ecf1';
+  sctx.fillText(angle+'°',cx,H-10);
+  // Arc guide
+  sctx.strokeStyle='rgba(79,142,247,0.2)';sctx.lineWidth=1;
+  sctx.beginPath();sctx.arc(cx,cy,55,-Math.PI/2,Math.PI/2);sctx.stroke();
+}
+
+function setServoAngle(a){
+  servoAngle=a;
+  document.getElementById('servoSlider').value=a;
+  document.getElementById('angleDisplay').textContent=a+'°';
+  const pw=Math.round(544+(a/180)*(2400-544));
+  document.getElementById('pwmWidth').textContent=pw+' µs';
+  drawServo(a);
+}
+
+function sweepServo(){
+  if(sweepInterval){clearInterval(sweepInterval);sweepInterval=null;return;}
+  let dir=1;
+  sweepInterval=setInterval(()=>{
+    servoAngle+=dir*2;
+    if(servoAngle>=180){servoAngle=180;dir=-1;}
+    if(servoAngle<=0){servoAngle=0;dir=1;}
+    setServoAngle(servoAngle);
+  },30);
+}
+drawServo(90);
+
+// Stepper canvas
+const stc = document.getElementById('stepperCanvas');
+const {ctx:stx,W:stcW,H:stcH} = hiDPI(stc);
+let stepperPos = 0;
+let stepAnimation = null;
+
+function drawStepper(angle){
+  const W=stcW,H=stcH,cx=W/2,cy=H/2,r=60;
+  stx.clearRect(0,0,W,H);
+  stx.fillStyle='#0c111d';stx.fillRect(0,0,W,H);
+  // Outer ring
+  stx.strokeStyle='rgba(236,72,153,0.3)';stx.lineWidth=8;
+  stx.beginPath();stx.arc(cx,cy,r,0,Math.PI*2);stx.stroke();
+  // Teeth
+  for(let i=0;i<12;i++){
+    const a=angle*Math.PI/180+i*(Math.PI*2/12);
+    stx.fillStyle='rgba(236,72,153,0.6)';
+    stx.beginPath();
+    stx.arc(cx+Math.cos(a)*(r+4),cy+Math.sin(a)*(r+4),4,0,Math.PI*2);
+    stx.fill();
+  }
+  // Shaft
+  stx.fillStyle='#2d1b4e';stx.beginPath();stx.arc(cx,cy,16,0,Math.PI*2);stx.fill();
+  stx.strokeStyle='#ec4899';stx.lineWidth=2;stx.stroke();
+  // Indicator
+  const ir=angle*Math.PI/180;
+  stx.strokeStyle='#ec4899';stx.lineWidth=3;stx.lineCap='round';
+  stx.beginPath();stx.moveTo(cx,cy);
+  stx.lineTo(cx+Math.cos(ir)*r*0.7,cy+Math.sin(ir)*r*0.7);stx.stroke();
+  // Angle label
+  stx.font='bold 14px Inter,sans-serif';stx.textAlign='center';stx.fillStyle='#e8ecf1';
+  stx.fillText(Math.round(((angle%360)+360)%360)+'°',cx,H-8);
+}
+
+function stepperRotate(deg,dir){
+  if(stepAnimation)return;
+  const target=stepperPos+deg*dir;
+  const step=dir*3;
+  stepAnimation=setInterval(()=>{
+    stepperPos+=step;
+    const diff=target-stepperPos;
+    if(Math.abs(diff)<Math.abs(step)){stepperPos=target;clearInterval(stepAnimation);stepAnimation=null;}
+    document.getElementById('stepperAngle').textContent=Math.round(((stepperPos%360)+360)%360)+'°';
+    const seqs=['1000','1100','0100','0110','0010','0011','0001','1001'];
+    const si=Math.floor(Math.abs(stepperPos)/45)%8;
+    document.getElementById('stepSeq').textContent=seqs[si];
+    drawStepper(stepperPos);
+  },20);
+}
+drawStepper(0);
+
+// ── Simple Sim Logic ──
+(function(){
+  const cvServo = document.getElementById('sim6ServoCanvas');
+  const cvStep = document.getElementById('sim6StepperCanvas');
+  if(!cvServo || !cvStep) return;
+
+  const ctxS = hiDPI(cvServo).ctx;
+  const ctxT = hiDPI(cvStep).ctx;
+  const WS=160, HS=160, WT=160, HT=160;
+
+  let sAngle=0, sDir=1;
+  let tAngle=0, tSpeed=2;
+
+  function drawSim(){
+    // Draw Servo
+    sAngle += sDir*2;
+    if(sAngle>=180){sAngle=180;sDir=-1;}
+    if(sAngle<=0){sAngle=0;sDir=1;}
+
+    ctxS.fillStyle='#0c111d'; ctxS.fillRect(0,0,WS,HS);
+    const cx=WS/2, cy=HS/2+10;
+    ctxS.fillStyle='#1e3a5f'; roundRect(ctxS,cx-30,cy-20,60,50,6); ctxS.fill();
+    const rad=(sAngle-90)*Math.PI/180;
+    ctxS.strokeStyle='#22c55e'; ctxS.lineWidth=4; ctxS.lineCap='round';
+    ctxS.beginPath(); ctxS.moveTo(cx,cy); ctxS.lineTo(cx+Math.cos(rad)*40,cy+Math.sin(rad)*40); ctxS.stroke();
+    ctxS.fillStyle='#4f8ef7'; ctxS.beginPath(); ctxS.arc(cx,cy,5,0,Math.PI*2); ctxS.fill();
+
+    // Draw Stepper
+    tAngle += tSpeed;
+    if(tAngle>=360) tAngle=0;
+    ctxT.fillStyle='#0c111d'; ctxT.fillRect(0,0,WT,HT);
+    const tcx=WT/2, tcy=HT/2;
+    ctxT.fillStyle='#2C2C2A'; ctxT.beginPath(); ctxT.arc(tcx,tcy,40,0,Math.PI*2); ctxT.fill();
+    ctxT.fillStyle='#d4d4d4'; ctxT.beginPath(); ctxT.arc(tcx,tcy,15,0,Math.PI*2); ctxT.fill();
+    const trad=tAngle*Math.PI/180;
+    ctxT.fillStyle='#ef4444'; ctxT.beginPath(); ctxT.arc(tcx+Math.cos(trad)*30, tcy+Math.sin(trad)*30, 4, 0, Math.PI*2); ctxT.fill();
+
+    requestAnimationFrame(drawSim);
+  }
+  requestAnimationFrame(drawSim);
+})();
+
+</script>
+<style>
+</style>
+</body>
+</html>

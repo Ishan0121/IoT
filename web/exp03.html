@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Exp 03 — Blinking LED | IoT Lab</title>
+  <meta name="description" content="Blinking LED Sketch with Arduino — delay vs millis, PWM fade, non-blocking timing.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp02.html" class="nav-back">← Exp 02</a>
+  <div class="nav-exp-id">Exp 03 / 10</div>
+  <a href="exp04.html" class="nav-next">Exp 04 →</a>
+</nav>
+
+<header class="exp-header">
+  <div class="exp-badge">Experiment 03</div>
+  <h1>Blinking LED Sketch<br>with Arduino</h1>
+  <p class="exp-subtitle">Control an LED with delay-based and non-blocking millis() timing. Understand PWM fade using analogWrite on PWM-capable pins.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 Objective: LED Control & Timing</span>
+    <span class="meta-pill diff-beginner">Beginner</span>
+    <span class="meta-pill">Pin 9 (PWM)</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+  <!-- LED SIMULATOR -->
+  <section class="section">
+    <h2 class="section-title">🔌 Circuit Diagram</h2>
+    <div class="cards-3">
+      <div class="info-card" style="--card-accent:#22c55e">
+        <div class="info-card-title">🧩 Components</div>
+        <ul class="info-list">
+          <li>Arduino UNO</li>
+          <li>1× LED (any color)</li>
+          <li>1× 220Ω resistor</li>
+          <li>Breadboard + jumper wires</li>
+        </ul>
+      </div>
+      <div class="info-card" style="--card-accent:#4f8ef7">
+        <div class="info-card-title">🔌 Wiring</div>
+        <ul class="info-list">
+          <li>Pin 9 → 220Ω → LED(+) anode</li>
+          <li>LED(−) cathode → GND</li>
+          <li>Pin 9 is PWM-capable</li>
+          <li>220Ω limits current to ~14mA</li>
+        </ul>
+      </div>
+      <div class="info-card" style="--card-accent:#f59e0b">
+        <div class="info-card-title">⚠️ Why 220Ω?</div>
+        <ul class="info-list">
+          <li>LED forward voltage ~2V</li>
+          <li>(5V − 2V) / 0.014A = 214Ω</li>
+          <li>220Ω is the nearest standard value</li>
+          <li>Max pin current: 40mA — don't exceed!</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIMPLE SOLUTION -->
+  <section class="section">
+    <h2 class="section-title">🟢 Simple Solution — delay() Blink</h2>
+    <div class="solution-banner simple">⭐ Start Here — uses only <code>delay()</code> and <code>digitalWrite()</code>. Perfect for your first sketch.</div>
+    <!-- Simple sim -->
+    <div class="sim-frame" style="margin-bottom:14px">
+      <div style="padding:16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+        <div id="simpleLed" style="width:54px;height:54px;border-radius:50%;background:#22c55e;border:3px solid #1a4a2a;transition:all 0.08s;flex-shrink:0"></div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px">Pin 13 — Built-in LED</div>
+          <div style="font-size:12px;color:var(--text2)">State: <span id="simpleLedState" style="color:var(--text2);font-weight:600">OFF</span>&nbsp;|&nbsp;Uses <code>delay(1000)</code></div>
+        </div>
+      </div>
+      <div class="sim-controls">
+        <span style="font-size:11px;color:var(--text3)">Simulates delay()-based blink — CPU is blocked while waiting</span>
+      </div>
+    </div>
+    <div class="code-container">
+      <div class="code-header"><span class="code-filename">simple.ino — Exp 03 (Beginner)</span><button class="copy-btn" onclick="copyCode('code03s')">Copy</button></div>
+      <pre class="code-block" id="code03s"><span class="cm">// Simple LED Blink — the classic first sketch!
+// Circuit: built-in LED on Pin 13 (no extra components needed)</span>
+
+<span class="ck">const int</span> LED_PIN = <span class="cn">13</span>;  <span class="cm">// Pin 13 has a built-in LED on Arduino UNO</span>
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  pinMode(LED_PIN, OUTPUT);  <span class="cm">// Set pin as output</span>
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  digitalWrite(LED_PIN, HIGH);  <span class="cm">// Turn LED ON</span>
+  delay(<span class="cn">1000</span>);                  <span class="cm">// Wait 1 second</span>
+  digitalWrite(LED_PIN, LOW);   <span class="cm">// Turn LED OFF</span>
+  delay(<span class="cn">1000</span>);                  <span class="cm">// Wait 1 second</span>
+}                                <span class="cm">// (repeat forever)</span></pre>
+    </div>
+  </section>
+
+  <!-- ADVANCED SOLUTION -->
+  <section class="section">
+    <h2 class="section-title">💡 Live LED Simulator</h2>
+    <div class="sim-frame">
+      <div style="padding:20px 16px">
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+          <div id="ledBulb" style="width:60px;height:60px;border-radius:50%;background:#22c55e;box-shadow:0 0 0px 0px #22c55e;transition:all 0.1s;flex-shrink:0;border:3px solid #1a4a2a"></div>
+          <div>
+            <div style="font-weight:600;font-size:14px;color:var(--text);margin-bottom:4px">Pin 9 (PWM) LED</div>
+            <div style="font-size:12px;color:var(--text2)">State: <span id="ledStateLabel" style="color:var(--green);font-weight:600">OFF</span> &nbsp;|&nbsp; Blink count: <span id="blinkCount" style="color:var(--accent)">0</span></div>
+            <div style="font-size:12px;color:var(--text2);margin-top:3px">Brightness: <span id="brightness">0</span> / 255</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="font-size:12px;color:var(--text2);min-width:70px">ON Time</label>
+            <input type="range" id="onTime" min="100" max="2000" value="700" style="flex:1">
+            <span id="onTimeVal" style="font-size:12px;color:var(--accent);min-width:55px;font-family:JetBrains Mono,monospace">700 ms</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <label style="font-size:12px;color:var(--text2);min-width:70px">OFF Time</label>
+            <input type="range" id="offTime" min="100" max="2000" value="300" style="flex:1">
+            <span id="offTimeVal" style="font-size:12px;color:var(--text2);min-width:55px;font-family:JetBrains Mono,monospace">300 ms</span>
+          </div>
+        </div>
+      </div>
+      <div class="sim-controls">
+        <button class="sim-btn active" id="btnMode1" onclick="setMode('blink')">⚡ Blink</button>
+        <button class="sim-btn" id="btnMode2" onclick="setMode('fade')">🌊 PWM Fade</button>
+        <button class="sim-btn" id="btnMode3" onclick="setMode('off')">■ Off</button>
+        <span style="margin-left:auto;font-size:11px;color:var(--text3)">Simulated non-blocking millis()</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- CIRCUIT -->
+  <section class="section">
+    <h2 class="section-title">💾 Advanced Solution — millis() + PWM Fade</h2>
+    <div class="solution-banner advanced">🚀 Advanced — non-blocking timing with <code>millis()</code> and PWM brightness fade.</div>
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-filename">program.ino — Exp 03</span>
+        <button class="copy-btn" onclick="copyCode('code03')">Copy</button>
+      </div>
+      <pre class="code-block" id="code03"><span class="cm">/*
+ * Experiment 03 — Blinking LED Sketch
+ * Non-blocking blink + PWM fade demonstration
+ * Circuit: Pin 9 → 220Ω → LED → GND
+ */</span>
+
+<span class="ck">const int</span> LED_PIN  = <span class="cn">9</span>;     <span class="cm">// PWM-capable pin</span>
+<span class="ck">const int</span> ON_TIME   = <span class="cn">700</span>;   <span class="cm">// ms LED stays ON</span>
+<span class="ck">const int</span> OFF_TIME  = <span class="cn">300</span>;   <span class="cm">// ms LED stays OFF</span>
+
+<span class="ck">int</span>           blinkCount = <span class="cn">0</span>;
+<span class="ck">bool</span>          ledState   = <span class="cn">false</span>;
+<span class="ck">unsigned long</span> lastToggle = <span class="cn">0</span>;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">9600</span>);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+  Serial.println(F(<span class="cs">"=== LED Blink Experiment ==="</span>));
+}
+
+<span class="cm">// ── Non-blocking blink using millis() ──────</span>
+<span class="ck">void</span> <span class="cf">updateBlink</span>() {
+  <span class="ck">unsigned long</span> now      = millis();
+  <span class="ck">unsigned long</span> interval = ledState ? ON_TIME : OFF_TIME;
+
+  <span class="ck">if</span> (now - lastToggle &gt;= interval) {
+    lastToggle = now;
+    ledState   = !ledState;
+    digitalWrite(LED_PIN, ledState ? HIGH : LOW);
+    <span class="ck">if</span> (ledState) {
+      blinkCount++;
+      Serial.print(F(<span class="cs">"Blink #"</span>)); Serial.println(blinkCount);
+    }
+  }
+}
+
+<span class="cm">// ── PWM Fade (called every 10 blinks) ──────</span>
+<span class="ck">void</span> <span class="cf">fadeLED</span>(<span class="ck">int</span> from, <span class="ck">int</span> to, <span class="ck">int</span> stepDelay) {
+  <span class="ck">int</span> step = (from &lt; to) ? <span class="cn">1</span> : <span class="cn">-1</span>;
+  <span class="ck">for</span> (<span class="ck">int</span> b = from; b != to + step; b += step) {
+    analogWrite(LED_PIN, b);
+    delay(stepDelay);
+  }
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  updateBlink();
+
+  <span class="cm">// Every 10 blinks, run a PWM fade sequence</span>
+  <span class="ck">if</span> (blinkCount &gt; <span class="cn">0</span> &amp;&amp; blinkCount % <span class="cn">10</span> == <span class="cn">0</span>) {
+    <span class="ck">static int</span> lastFade = <span class="cn">0</span>;
+    <span class="ck">if</span> (blinkCount != lastFade) {
+      lastFade = blinkCount;
+      Serial.println(F(<span class="cs">"--- PWM Fade ---"</span>));
+      fadeLED(<span class="cn">0</span>, <span class="cn">255</span>, <span class="cn">5</span>);   <span class="cm">// Fade in</span>
+      fadeLED(<span class="cn">255</span>, <span class="cn">0</span>, <span class="cn">5</span>);   <span class="cm">// Fade out</span>
+      lastToggle = millis();  <span class="cm">// Re-sync timer</span>
+    }
+  }
+}</pre>
+    </div>
+  </section>
+
+  <!-- FLOWCHART -->
+  <section class="section">
+    <h2 class="section-title">📊 Program Flowchart</h2>
+    <div class="flowchart">
+      <div class="fc-start">START</div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-box">setup()<br><span class="fc-detail">Serial.begin · pinMode OUTPUT · ledState=false</span></div>
+      <div class="fc-arrow">↓</div>
+      <div class="fc-loop-label">loop() — runs forever</div>
+      <div class="fc-loop-body">
+        <div class="fc-box">Call updateBlink()</div>
+        <div class="fc-diamond">now − lastToggle ≥ interval?</div>
+        <div class="fc-branch">
+          <div class="fc-branch-yes">
+            <div class="fc-mini" style="color:var(--green)">YES</div>
+            <div class="fc-box-sm">Toggle ledState<br>digitalWrite(HIGH/LOW)<br>Print blink count</div>
+          </div>
+          <div class="fc-branch-no">
+            <div class="fc-mini" style="color:var(--red)">NO</div>
+            <div class="fc-box-sm">Return immediately<br>(non-blocking!)</div>
+          </div>
+        </div>
+        <div class="fc-diamond" style="margin-top:12px">blinkCount % 10 == 0?</div>
+        <div class="fc-branch">
+          <div class="fc-branch-yes">
+            <div class="fc-mini" style="color:var(--green)">YES</div>
+            <div class="fc-box-sm">fadeLED(0→255)<br>fadeLED(255→0)<br>Re-sync timer</div>
+          </div>
+          <div class="fc-branch-no">
+            <div class="fc-mini" style="color:var(--red)">NO</div>
+            <div class="fc-box-sm">Continue blinking</div>
+          </div>
+        </div>
+      </div>
+      <div class="fc-arrow-back">↑ repeat forever</div>
+    </div>
+  </section>
+
+  <!-- NOTES -->
+  <section class="section">
+    <h2 class="section-title">📝 Notes, Extras & Key Concepts</h2>
+    <div class="notes-grid">
+      <div class="note-card note-warn">
+        <div class="note-title">⚠️ Why delay() is Bad</div>
+        <div class="note-body"><code>delay(1000)</code> freezes the entire Arduino for 1 second — it can't read buttons, update displays, or react to anything. This is called <strong>blocking</strong>. Use <code>millis()</code> to achieve the same timing without blocking: check if enough time has passed each loop iteration.</div>
+      </div>
+      <div class="note-card note-info">
+        <div class="note-title">💡 PWM — Pulse Width Modulation</div>
+        <div class="note-body">Digital pins can only be HIGH or LOW. PWM <em>simulates</em> analog voltage by rapidly switching between HIGH and LOW. The ratio of time spent HIGH vs LOW is called the <strong>duty cycle</strong>. <code>analogWrite(pin, 127)</code> → 50% duty → LED appears at half brightness.</div>
+      </div>
+      <div class="note-card note-tip">
+        <div class="note-title">🔋 millis() Overflow</div>
+        <div class="note-body"><code>millis()</code> returns an <code>unsigned long</code> that overflows back to 0 after ~49.7 days. Using subtraction (<code>now - lastToggle</code>) handles this automatically and correctly — the math wraps safely because both variables are unsigned.</div>
+      </div>
+      <div class="note-card note-info">
+        <div class="note-title">📐 resistor Calculation</div>
+        <div class="note-body">R = (Vsupply − Vforward) / I_desired<br>= (5V − 2V) / 0.015A = 200Ω<br>Use 220Ω (nearest standard value). For 3.3V supply: (3.3V − 2V) / 0.01A = 130Ω → use 150Ω. Always limit LED current to 10–20mA max.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FUNCTIONS -->
+  <section class="section">
+    <h2 class="section-title">🔧 Key Functions</h2>
+    <div class="func-list">
+      <div class="func-item">
+        <code class="func-sig">digitalWrite(pin, value)</code>
+        <div class="func-desc">Set digital pin to HIGH (5V) or LOW (0V). Pin must be set as OUTPUT with <code>pinMode()</code> first. Cannot control brightness — only on or off.</div>
+      </div>
+      <div class="func-item">
+        <code class="func-sig">analogWrite(pin, value)</code>
+        <div class="func-desc">Output a PWM signal. Value 0–255 (0% to 100% duty cycle). Only works on PWM pins: D3, D5, D6, D9, D10, D11 on UNO. Does NOT output a true analog voltage.</div>
+      </div>
+      <div class="func-item">
+        <code class="func-sig">millis()</code>
+        <div class="func-desc">Returns milliseconds since program start as <code>unsigned long</code>. Use for non-blocking timing: <code>if (millis() - lastTime &gt;= interval) { ... }</code>.</div>
+      </div>
+      <div class="func-item">
+        <code class="func-sig">delay(ms)</code>
+        <div class="func-desc">Pause execution for specified milliseconds. Blocks ALL other processing including interrupt-driven tasks. Avoid for anything beyond simple demos.</div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="exp-footer">
+  <a href="exp02.html">← Exp 02</a>
+  <span>Exp 03 of 10 · Blinking LED</span>
+  <a href="exp04.html">Exp 04 →</a>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+let mode = 'blink';
+let ledOn = false;
+let blinkCount = 0;
+let lastToggle = Date.now();
+let onTime = 700, offTime = 300;
+let fadeDir = 1, fadeBr = 0;
+
+function setMode(m) {
+  mode = m;
+  document.querySelectorAll('.sim-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btnMode1').classList.toggle('active', m==='blink');
+  document.getElementById('btnMode2').classList.toggle('active', m==='fade');
+  document.getElementById('btnMode3').classList.toggle('active', m==='off');
+}
+
+document.getElementById('onTime').addEventListener('input', function(){
+  onTime = +this.value;
+  document.getElementById('onTimeVal').textContent = onTime + ' ms';
+});
+document.getElementById('offTime').addEventListener('input', function(){
+  offTime = +this.value;
+  document.getElementById('offTimeVal').textContent = offTime + ' ms';
+});
+
+function setLed(brightness) {
+  const bulb = document.getElementById('ledBulb');
+  const alpha = brightness / 255;
+  const glow = Math.round(alpha * 32);
+  bulb.style.background = `rgba(34,197,94,${0.2 + alpha * 0.8})`;
+  bulb.style.boxShadow = `0 0 ${glow}px ${Math.round(glow/2)}px rgba(34,197,94,${alpha * 0.8})`;
+  document.getElementById('brightness').textContent = Math.round(brightness);
+  document.getElementById('ledStateLabel').textContent = brightness > 0 ? 'ON' : 'OFF';
+  document.getElementById('ledStateLabel').style.color = brightness > 0 ? 'var(--green)' : 'var(--text2)';
+}
+
+function tick() {
+  const now = Date.now();
+  if (mode === 'blink') {
+    const interval = ledOn ? onTime : offTime;
+    if (now - lastToggle >= interval) {
+      lastToggle = now;
+      ledOn = !ledOn;
+      if (ledOn) {
+        blinkCount++;
+        document.getElementById('blinkCount').textContent = blinkCount;
+      }
+    }
+    setLed(ledOn ? 255 : 0);
+  } else if (mode === 'fade') {
+    fadeBr += fadeDir * 4;
+    if (fadeBr >= 255) { fadeBr = 255; fadeDir = -1; }
+    if (fadeBr <= 0)   { fadeBr = 0;   fadeDir = 1; }
+    setLed(fadeBr);
+  } else {
+    setLed(0);
+  }
+  requestAnimationFrame(tick);
+}
+tick();
+// Simple LED blink sim (1s on/1s off)
+;(function(){
+  let on=false;
+  setInterval(()=>{
+    on=!on;
+    const b=document.getElementById('simpleLed');
+    const s=document.getElementById('simpleLedState');
+    if(!b)return;
+    b.style.background=on?'#22c55e':'rgba(34,197,94,0.1)';
+    b.style.boxShadow=on?'0 0 22px 8px rgba(34,197,94,0.6)':'none';
+    s.textContent=on?'ON':'OFF';
+    s.style.color=on?'var(--green)':'var(--text2)';
+  },1000);
+})();
+</script>
+<style>
+.solution-banner{padding:10px 14px;border-radius:8px;font-size:12.5px;margin-bottom:12px;}
+.solution-banner code{background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.solution-banner.simple{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
+.solution-banner.advanced{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.25);color:var(--accent);}
+</style>
+</html>

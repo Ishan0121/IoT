@@ -24,21 +24,21 @@ The **Arduino UNO** is an open-source microcontroller development board based on
 ```
                     Arduino UNO — Top View
    ┌──────────────────────────────────────────────────────────┐
-   │  [USB Type-B Port]               [DC Power Jack 7-12V]  │
+   │  [USB Type-B Port]                [DC Power Jack 7-12V]  │
    │                                                          │
-   │  ┌──────────┐                                           │
-   │  │ATmega328P│   <- Main microcontroller chip            │
-   │  └──────────┘                                           │
+   │  ┌──────────┐                                            │
+   │  │ATmega328P│   <- Main microcontroller chip             │
+   │  └──────────┘                                            │
    │                                                          │
-   │  Digital Pins:  D0  D1  D2  D3~ D4  D5~ D6~ D7         │
-   │                 D8  D9~ D10~ D11~ D12 D13(LED)          │
+   │  Digital Pins:  D0  D1  D2  D3~ D4  D5~ D6~ D7           │
+   │                 D8  D9~ D10~ D11~ D12 D13(LED)           │
    │                 ~ = PWM capable                          │
    │                                                          │
-   │  Analog Pins:   A0  A1  A2  A3  A4(SDA) A5(SCL)        │
+   │  Analog Pins:   A0  A1  A2  A3  A4(SDA) A5(SCL)          │
    │                                                          │
-   │  Power Header:  IOREF  RESET  3.3V  5V  GND  GND  Vin  │
+   │  Power Header:  IOREF  RESET  3.3V  5V  GND  GND  Vin    │
    │                                                          │
-   │  [RESET Button]     [TX LED]  [RX LED]  [Pin13 LED]     │
+   │  [RESET Button]     [TX LED]  [RX LED]  [Pin13 LED]      │
    │  [ICSP Header]      [16MHz Crystal]                      │
    └──────────────────────────────────────────────────────────┘
 ```

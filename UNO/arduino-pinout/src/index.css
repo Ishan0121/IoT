@@ -1,0 +1,180 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body, #root {
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #0a0d14;
+    color: #e2e8f0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0f1420;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1e2640;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #22d3ee40;
+  }
+}
+
+@layer components {
+  /* Grid background pattern */
+  .bg-grid {
+    background-color: #0a0d14;
+    background-image:
+      linear-gradient(rgba(34, 211, 238, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(34, 211, 238, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  /* Dot pattern overlay */
+  .bg-dots {
+    background-image: radial-gradient(circle, rgba(34, 211, 238, 0.08) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Hotspot base styles */
+  .hotspot {
+    @apply absolute rounded cursor-pointer transition-all duration-200;
+    border: 1px solid transparent;
+  }
+
+  .hotspot:hover,
+  .hotspot.active {
+    border-color: currentColor;
+  }
+
+  /* Category color classes */
+  .hotspot-power    { color: #ff6b35; }
+  .hotspot-analog   { color: #a855f7; }
+  .hotspot-digital  { color: #22d3ee; }
+  .hotspot-comm     { color: #4ade80; }
+  .hotspot-component { color: #facc15; }
+
+  /* Glow ring animation */
+  @keyframes glowPulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 currentColor;
+      opacity: 0.6;
+    }
+    50% {
+      box-shadow: 0 0 0 4px currentColor40, 0 0 12px 2px currentColor;
+      opacity: 1;
+    }
+  }
+
+  @keyframes ripple {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+  }
+
+  @keyframes electricFlow {
+    0% { stroke-dashoffset: 200; opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 0.3; }
+  }
+
+  @keyframes particleFlow {
+    0% { stroke-dashoffset: 150; }
+    100% { stroke-dashoffset: -150; }
+  }
+
+  @keyframes slideUpFade {
+    from { transform: translateY(16px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100vh); }
+  }
+
+  .hotspot-active-ring {
+    animation: glowPulse 1.5s ease-in-out infinite;
+  }
+
+  .electric-line {
+    animation: electricFlow 1.2s ease-in-out infinite;
+  }
+
+  .particle-line {
+    animation: particleFlow 0.8s linear infinite;
+  }
+
+  .info-panel-enter {
+    animation: slideUpFade 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Neon text glow */
+  .text-neon-power    { color: #ff6b35; text-shadow: 0 0 8px #ff6b3580; }
+  .text-neon-analog   { color: #a855f7; text-shadow: 0 0 8px #a855f780; }
+  .text-neon-digital  { color: #22d3ee; text-shadow: 0 0 8px #22d3ee80; }
+  .text-neon-comm     { color: #4ade80; text-shadow: 0 0 8px #4ade8080; }
+  .text-neon-component { color: #facc15; text-shadow: 0 0 8px #facc1580; }
+
+  /* Glass card */
+  .glass-card {
+    background: rgba(20, 25, 40, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(30, 38, 64, 0.8);
+  }
+
+  /* Scanline effect */
+  .scanline::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.08) 2px,
+      rgba(0, 0, 0, 0.08) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* Code block */
+  .code-block {
+    background: #080b12;
+    border: 1px solid #1e2640;
+    border-radius: 8px;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: #a5f3fc;
+  }
+
+  /* Filter button active states */
+  .filter-btn-power.active    { background: #ff6b3520; border-color: #ff6b35; color: #ff6b35; }
+  .filter-btn-analog.active   { background: #a855f720; border-color: #a855f7; color: #a855f7; }
+  .filter-btn-digital.active  { background: #22d3ee20; border-color: #22d3ee; color: #22d3ee; }
+  .filter-btn-comm.active     { background: #4ade8020; border-color: #4ade80; color: #4ade80; }
+  .filter-btn-component.active { background: #facc1520; border-color: #facc15; color: #facc15; }
+  .filter-btn-all.active      { background: #e2e8f020; border-color: #e2e8f0; color: #e2e8f0; }
+}

@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Exp 10 — Arduino Cloud (ThingSpeak) | IoT Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp09.html">← Exp 09</a>
+  <div class="nav-exp-id">Exp 10 / 10</div>
+  <a href="index.html">↩ Index</a>
+</nav>
+<header class="exp-header">
+  <div class="exp-badge">Experiment 10</div>
+  <h1>Interfacing Arduino<br>with Cloud (ThingSpeak)</h1>
+  <p class="exp-subtitle">Send live sensor data to ThingSpeak IoT cloud over WiFi using ESP8266. View real-time graphs from anywhere in the world via HTTP REST API.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 ESP8266 · ThingSpeak · WiFi · HTTP REST</span>
+    <span class="meta-pill diff-advanced">Advanced</span>
+    <span class="meta-pill">Board: NodeMCU / Wemos D1</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+<section class="section">
+  <h2 class="section-title">☁️ IoT Data Pipeline</h2>
+  <div style="display:flex;flex-direction:column;gap:0">
+    <div style="display:flex;flex-wrap:wrap;gap:0;align-items:stretch">
+      <div class="pipeline-step" style="--pc:#22c55e">
+        <div class="ps-icon">🌡️</div>
+        <div class="ps-label">Physical World</div>
+        <div class="ps-detail">Temperature rises in room</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="pipeline-step" style="--pc:#4f8ef7">
+        <div class="ps-icon">📟</div>
+        <div class="ps-label">DHT11 Sensor</div>
+        <div class="ps-detail">Converts to digital signal</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="pipeline-step" style="--pc:#f59e0b">
+        <div class="ps-icon">🔌</div>
+        <div class="ps-label">ESP8266</div>
+        <div class="ps-detail">Reads sensor, packages data</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="pipeline-step" style="--pc:#ec4899">
+        <div class="ps-icon">📶</div>
+        <div class="ps-label">WiFi → Internet</div>
+        <div class="ps-detail">HTTP GET to ThingSpeak API</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="pipeline-step" style="--pc:#06b6d4">
+        <div class="ps-icon">☁️</div>
+        <div class="ps-label">ThingSpeak</div>
+        <div class="ps-detail">Stores in time-series DB</div>
+      </div>
+      <div class="ps-arrow">→</div>
+      <div class="pipeline-step" style="--pc:#7c3aed">
+        <div class="ps-icon">📊</div>
+        <div class="ps-label">Dashboard</div>
+        <div class="ps-detail">View graphs anywhere, anytime</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">⚙️ ESP8266 Setup in Arduino IDE</h2>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">Board Manager URL</span></div>
+    <pre class="code-block">File → Preferences → Additional Board Manager URLs:
+http://arduino.esp8266.com/stable/package_esp8266com_index.json
+
+Tools → Board → Boards Manager → search "esp8266" → Install
+Tools → Board → ESP8266 Boards → NodeMCU 1.0 (or Wemos D1 Mini)
+Tools → Upload Speed → 115200</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution — Basic WiFi + Cloud Upload</h2>
+  <div class="solution-banner simple">⭐ Start Here — connect to WiFi and send ONE temperature value to ThingSpeak. Minimum code to get data into the cloud.</div>
+  <!-- Simple Sim -->
+  <div class="sim-frame" style="margin-top:16px; margin-bottom:14px">
+    <div style="padding:16px">
+      <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Serial Monitor</div>
+      <div id="sim10Serial" style="background:#0c111d;border-radius:6px;padding:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text);height:120px;overflow-y:auto;border:1px solid var(--border);white-space:pre-wrap"></div>
+    </div>
+    <div class="sim-controls">
+      <span style="font-size:11px;color:var(--text3)">Simulates WiFi connection and basic ThingSpeak GET request loop</span>
+    </div>
+  </div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">simple.ino — Exp 10 (Beginner)</span><button class="copy-btn" onclick="copyCode('code10s')">Copy</button></div>
+    <pre class="code-block" id="code10s"><span class="cm">// Simple ESP8266 ThingSpeak Upload
+// Upload temperature (DHT11 on D4) to 1 field every 15s</span>
+
+<span class="cp">#include</span> &lt;ESP8266WiFi.h&gt;
+<span class="cp">#include</span> &lt;DHT.h&gt;
+
+<span class="ck">const char*</span> SSID    = <span class="cs">&quot;YOUR_WIFI_SSID&quot;</span>;
+<span class="ck">const char*</span> PASS    = <span class="cs">&quot;YOUR_WIFI_PASSWORD&quot;</span>;
+<span class="ck">const char*</span> API_KEY = <span class="cs">&quot;YOUR_WRITE_API_KEY&quot;</span>;
+
+DHT dht(D4, DHT11);
+WiFiClient client;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">115200</span>);
+  dht.begin();
+  WiFi.begin(SSID, PASS);
+  Serial.print(<span class="cs">&quot;Connecting&quot;</span>);
+  <span class="ck">while</span>(WiFi.status() != WL_CONNECTED) { delay(<span class="cn">500</span>); Serial.print(<span class="cs">&quot;.&quot;</span>); }
+  Serial.println(<span class="cs">&quot;\nConnected! IP: &quot;</span> + WiFi.localIP().toString());
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="ck">float</span> temp = dht.readTemperature();
+  <span class="ck">if</span>(isnan(temp)) { Serial.println(<span class="cs">&quot;DHT error!&quot;</span>); delay(<span class="cn">15000</span>); <span class="ck">return</span>; }
+
+  <span class="cm">// Build ThingSpeak URL with field1=temperature</span>
+  <span class="ck">if</span>(client.connect(<span class="cs">&quot;api.thingspeak.com&quot;</span>, <span class="cn">80</span>)) {
+    String url = <span class="cs">&quot;/update?api_key=&quot;</span> + String(API_KEY) + <span class="cs">&quot;&amp;field1=&quot;</span> + String(temp);
+    client.println(<span class="cs">&quot;GET &quot;</span> + url + <span class="cs">&quot; HTTP/1.1&quot;</span>);
+    client.println(<span class="cs">&quot;Host: api.thingspeak.com&quot;</span>);
+    client.println(<span class="cs">&quot;Connection: close&quot;</span>);
+    client.println();
+    Serial.println(<span class="cs">&quot;Sent: &quot;</span> + String(temp) + <span class="cs">&quot;C&quot;</span>);
+    client.stop();
+  }
+  delay(<span class="cn">15000</span>); <span class="cm">// ThingSpeak free tier minimum</span>
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📊 Live Upload Simulator</h2>
+  <div class="sim-frame">
+    <div style="padding:16px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px">
+        <div style="background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Field 1 — Temp</div>
+          <div style="font-size:22px;font-weight:700;color:var(--accent)" id="f1">--</div>
+          <div style="font-size:10px;color:var(--text3)">°C</div>
+        </div>
+        <div style="background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Field 2 — Humidity</div>
+          <div style="font-size:22px;font-weight:700;color:var(--teal)" id="f2">--</div>
+          <div style="font-size:10px;color:var(--text3)">%</div>
+        </div>
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Field 3 — Light</div>
+          <div style="font-size:22px;font-weight:700;color:var(--amber)" id="f3">--</div>
+          <div style="font-size:10px;color:var(--text3)">/ 1023</div>
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:10px;color:var(--text2);margin-bottom:2px">Field 4 — Heat Idx</div>
+          <div style="font-size:22px;font-weight:700;color:var(--red)" id="f4">--</div>
+          <div style="font-size:10px;color:var(--text3)">°C</div>
+        </div>
+      </div>
+      <!-- Mini chart -->
+      <canvas id="chartCanvas" width="600" height="120" style="width:100%;border-radius:8px;background:#0c111d"></canvas>
+      <div style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        <div style="font-size:11px;color:var(--text2)">Next upload in: <span id="countdown" style="color:var(--accent);font-family:JetBrains Mono,monospace">15s</span></div>
+        <div style="font-size:11px;color:var(--text2)">Msg #<span id="msgId" style="color:var(--green);font-family:JetBrains Mono,monospace">0</span> &nbsp;|&nbsp; Status: <span id="uploadStatus" style="color:var(--text2)">Waiting...</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">💾 Advanced Solution — 4 Fields + HTTPClient + Auto-reconnect</h2>
+  <div class="solution-banner advanced">🚀 Advanced — 4 sensor fields, ESP8266HTTPClient library, auto-reconnect on WiFi drop, heat index calculation, LED status.</div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">program.ino — Exp 10 (ESP8266)</span><button class="copy-btn" onclick="copyCode('code10')">Copy</button></div>
+    <pre class="code-block" id="code10"><span class="cp">#include</span> &lt;ESP8266WiFi.h&gt;
+<span class="cp">#include</span> &lt;ESP8266HTTPClient.h&gt;
+<span class="cp">#include</span> &lt;WiFiClient.h&gt;
+<span class="cp">#include</span> &lt;DHT.h&gt;
+
+<span class="cm">// ✏ FILL IN YOUR OWN VALUES:</span>
+<span class="ck">const char*</span> WIFI_SSID = <span class="cs">"YOUR_WIFI_SSID"</span>;
+<span class="ck">const char*</span> WIFI_PASS = <span class="cs">"YOUR_WIFI_PASSWORD"</span>;
+<span class="ck">const char*</span> API_KEY   = <span class="cs">"YOUR_THINGSPEAK_WRITE_API_KEY"</span>;
+
+<span class="ck">const char*</span> TS_URL = <span class="cs">"http://api.thingspeak.com/update"</span>;
+<span class="cp">#define</span> DHT_PIN D4
+<span class="cp">#define</span> LDR_PIN A0
+<span class="cp">#define</span> LED_PIN D0
+<span class="cp">#define</span> DHTTYPE DHT11
+DHT dht(DHT_PIN, DHTTYPE);
+WiFiClient wifiClient;
+
+<span class="ck">const unsigned long</span> INTERVAL=15000UL;
+<span class="ck">unsigned long</span> lastUpload=0;
+<span class="ck">long</span> msgID=0;
+
+<span class="ck">void</span> <span class="cf">connectWiFi</span>(){
+  Serial.print(F(<span class="cs">"Connecting to WiFi"</span>));
+  WiFi.begin(WIFI_SSID,WIFI_PASS);
+  <span class="ck">int</span> tries=0;
+  <span class="ck">while</span>(WiFi.status()!=WL_CONNECTED&amp;&amp;tries++&lt;30){
+    delay(<span class="cn">500</span>);Serial.print(F(<span class="cs">"."</span>));
+  }
+  <span class="ck">if</span>(WiFi.status()==WL_CONNECTED){
+    Serial.print(F(<span class="cs">"\nIP: "</span>)); Serial.println(WiFi.localIP());
+  } <span class="ck">else</span> {Serial.println(F(<span class="cs">"\nFailed! Restarting..."</span>));delay(<span class="cn">3000</span>);ESP.restart();}
+}
+
+<span class="ck">bool</span> <span class="cf">uploadToThingSpeak</span>(<span class="ck">float</span> t,<span class="ck">float</span> h,<span class="ck">int</span> ldr,<span class="ck">float</span> hi){
+  <span class="ck">if</span>(WiFi.status()!=WL_CONNECTED){connectWiFi();return <span class="cn">false</span>;}
+  String url=String(TS_URL)
+    +<span class="cs">"?api_key="</span>+API_KEY
+    +<span class="cs">"&field1="</span>+String(t,1)
+    +<span class="cs">"&field2="</span>+String(h,1)
+    +<span class="cs">"&field3="</span>+String(ldr)
+    +<span class="cs">"&field4="</span>+String(hi,1);
+  HTTPClient http;
+  http.begin(wifiClient,url);
+  <span class="ck">int</span> code=http.GET();
+  <span class="ck">bool</span> ok=(code==HTTP_CODE_OK&amp;&amp;http.getString().toInt()&gt;0);
+  <span class="ck">if</span>(ok){msgID++;Serial.print(F(<span class="cs">"✓ Upload OK #"</span>));Serial.println(msgID);}
+  <span class="ck">else</span> Serial.println(F(<span class="cs">"✗ Upload failed"</span>));
+  http.end(); <span class="ck">return</span> ok;
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">115200</span>);
+  pinMode(LED_PIN,OUTPUT); digitalWrite(LED_PIN,HIGH);
+  dht.begin(); connectWiFi();
+  Serial.println(F(<span class="cs">"=== ThingSpeak Logger Ready ==="</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  <span class="ck">unsigned long</span> now=millis();
+  <span class="ck">if</span>(now-lastUpload&gt;=INTERVAL){
+    lastUpload=now;
+    <span class="ck">float</span> t=dht.readTemperature(),h=dht.readHumidity();
+    <span class="ck">if</span>(isnan(t)||isnan(h)){Serial.println(F(<span class="cs">"DHT error"</span>));return;}
+    <span class="ck">float</span> hi=dht.computeHeatIndex(t,h,false);
+    <span class="ck">int</span> ldr=analogRead(LDR_PIN);
+    Serial.print(F(<span class="cs">"T="</span>));Serial.print(t,1);Serial.print(F(<span class="cs">"°C H="</span>));
+    Serial.print(h,1);Serial.print(F(<span class="cs">"% L="</span>));Serial.println(ldr);
+    digitalWrite(LED_PIN,LOW); delay(<span class="cn">100</span>); digitalWrite(LED_PIN,HIGH);
+    uploadToThingSpeak(t,h,ldr,hi);
+  }
+  yield(); <span class="cm">// Keep ESP8266 WiFi stack healthy!</span>
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📊 Program Flowchart</h2>
+  <div class="flowchart">
+    <div class="fc-start">START — setup()</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">dht.begin() · connectWiFi() · wait for WL_CONNECTED</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-loop-label">loop() — runs every few ms</div>
+    <div class="fc-loop-body">
+      <div class="fc-diamond">millis() − lastUpload ≥ 15000?</div>
+      <div class="fc-branch">
+        <div class="fc-branch-yes">
+          <div class="fc-mini" style="color:var(--green)">YES</div>
+          <div class="fc-box-sm" style="text-align:left;padding:10px">
+            1. Read DHT11 (temp, hum)<br>
+            2. analogRead(A0) → light<br>
+            3. computeHeatIndex()<br>
+            4. Build URL with fields<br>
+            5. http.GET() → ThingSpeak<br>
+            6. Check response ≠ "0"<br>
+            7. Update lastUpload
+          </div>
+        </div>
+        <div class="fc-branch-no">
+          <div class="fc-mini" style="color:var(--text3)">NO</div>
+          <div class="fc-box-sm">yield()<br>WiFi stack runs</div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-arrow-back">↑ repeat forever</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">⚙️ ThingSpeak Setup Guide</h2>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Step</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Create free account at <strong>thingspeak.com</strong></td></tr>
+        <tr><td>2</td><td>Click <strong>New Channel</strong></td></tr>
+        <tr><td>3</td><td>Add fields: Field1=Temperature, Field2=Humidity, Field3=Light, Field4=Heat Index</td></tr>
+        <tr><td>4</td><td>Click <strong>Save Channel</strong></td></tr>
+        <tr><td>5</td><td>Go to <strong>API Keys</strong> tab → copy <strong>Write API Key</strong></td></tr>
+        <tr><td>6</td><td>Paste key into <code>API_KEY</code> constant in sketch</td></tr>
+        <tr><td>7</td><td>Upload sketch → view live graphs at thingspeak.com/channels/YOUR_ID</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📝 Notes & Extras</h2>
+  <div class="notes-grid">
+    <div class="note-card note-warn">
+      <div class="note-title">🔐 Never Commit Credentials!</div>
+      <div class="note-body">Your WiFi password and ThingSpeak API key should NEVER be uploaded to a public Git repository. Use a <code>config.h</code> file added to <code>.gitignore</code>, or store credentials in EEPROM at flash time. In production systems, use environment variables or a hardware secure element.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">💡 yield() is Critical on ESP8266</div>
+      <div class="note-body"><code>yield()</code> gives execution time back to the ESP8266 WiFi stack (LwIP). Without it in tight loops, the WiFi connection degrades and eventually drops. Unlike Arduino UNO, ESP8266 runs WiFi in software — it needs periodic CPU time to maintain the connection.</div>
+    </div>
+    <div class="note-card note-tip">
+      <div class="note-title">⏱️ 15-Second Rate Limit</div>
+      <div class="note-body">ThingSpeak free tier enforces a <strong>15-second minimum</strong> between updates per channel. Uploading faster returns "0" (rate limit). The sketch uses <code>millis()-lastUpload &gt;= 15000</code> non-blocking timer to respect this limit. Paid tiers allow faster updates.</div>
+    </div>
+    <div class="note-card note-info">
+      <div class="note-title">🌐 HTTP vs MQTT</div>
+      <div class="note-body">This experiment uses <strong>HTTP REST</strong> (GET request). For two-way, real-time IoT, <strong>MQTT</strong> is better: lightweight publish/subscribe, much lower overhead, supports device-to-device communication. ThingSpeak supports both. MQTT is the industry standard for professional IoT systems.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔧 Key Functions</h2>
+  <div class="func-list">
+    <div class="func-item"><code class="func-sig">WiFi.begin(ssid, password)</code><div class="func-desc">Start WiFi connection. Non-blocking — check <code>WiFi.status() == WL_CONNECTED</code> in a loop. Use retry limit to avoid infinite hang.</div></div>
+    <div class="func-item"><code class="func-sig">http.begin(wifiClient, url)</code><div class="func-desc">Initialize HTTP client with URL. The WiFiClient handles TCP connection. URL includes API key and field values as query parameters.</div></div>
+    <div class="func-item"><code class="func-sig">http.GET()</code><div class="func-desc">Send HTTP GET request. Returns HTTP status code (200=OK). ThingSpeak returns the message ID as a string in the body — "0" means error or rate limited.</div></div>
+    <div class="func-item"><code class="func-sig">dht.computeHeatIndex(temp, hum, false)</code><div class="func-desc">Calculate heat index (feels-like temperature) from temperature + humidity. Last parameter: false=Celsius, true=Fahrenheit. Uses Steadman formula.</div></div>
+    <div class="func-item"><code class="func-sig">yield()</code><div class="func-desc">ESP8266-specific: temporarily yield CPU to WiFi background tasks. Call at least every 50ms in busy loops. Arduino UNO doesn't need this — only ESP8266/ESP32.</div></div>
+    <div class="func-item"><code class="func-sig">ESP.restart()</code><div class="func-desc">Software reset the ESP8266. Used as recovery when WiFi fails after maximum retries — cleaner than getting stuck in an error state.</div></div>
+  </div>
+</section>
+
+</main>
+<footer class="exp-footer">
+  <a href="exp09.html">← Exp 09</a>
+  <span>Exp 10 of 10 · Cloud Interface</span>
+  <a href="index.html">↩ Index</a>
+</footer>
+<script src="shared.js"></script>
+<script>
+// Live chart simulation
+const cc = document.getElementById('chartCanvas');
+const {ctx:cctx,W:ccW,H:ccH} = hiDPI(cc);
+const history = [];
+let countdown = 15, msgCount = 0;
+
+function generatePoint(){
+  return {
+    temp: +(22+Math.random()*8).toFixed(1),
+    hum: Math.round(50+Math.random()*30),
+    light: Math.round(200+Math.random()*600),
+    hi: +(24+Math.random()*6).toFixed(1)
+  };
+}
+
+function drawChart(){
+  const W=ccW, H=ccH;
+  cctx.clearRect(0,0,W,H);
+  cctx.fillStyle='#0c111d'; cctx.fillRect(0,0,W,H);
+  if(history.length<2) return;
+  const colors=['#4f8ef7','#14b8a6','#f59e0b'];
+  const keys=['temp','hum'];
+  keys.forEach((key,ki)=>{
+    const vals=history.map(p=>p[key]);
+    const mn=Math.min(...vals), mx=Math.max(...vals);
+    const range=mx-mn||1;
+    cctx.strokeStyle=colors[ki]; cctx.lineWidth=2;
+    cctx.beginPath();
+    history.forEach((p,i)=>{
+      const x=(i/(history.length-1))*(W-20)+10;
+      const y=H-((p[key]-mn)/range)*(H-20)-10;
+      i===0?cctx.moveTo(x,y):cctx.lineTo(x,y);
+    });
+    cctx.stroke();
+    // Last point dot
+    const last=history[history.length-1];
+    const lx=W-10, ly=H-((last[key]-mn)/range)*(H-20)-10;
+    cctx.fillStyle=colors[ki];
+    cctx.beginPath(); cctx.arc(lx,ly,4,0,Math.PI*2); cctx.fill();
+  });
+  // Legend
+  cctx.font='10px Inter'; cctx.textAlign='left';
+  [['#4f8ef7','Temp'],['#14b8a6','Humidity']].forEach(([c,l],i)=>{
+    cctx.fillStyle=c; cctx.fillText('● '+l, 10+i*80, 14);
+  });
+}
+
+function doUpload(){
+  const pt = generatePoint();
+  history.push(pt); if(history.length>30) history.shift();
+  msgCount++;
+  document.getElementById('f1').textContent=pt.temp;
+  document.getElementById('f2').textContent=pt.hum;
+  document.getElementById('f3').textContent=pt.light;
+  document.getElementById('f4').textContent=pt.hi;
+  document.getElementById('msgId').textContent=msgCount;
+  document.getElementById('uploadStatus').textContent='✓ Upload OK';
+  document.getElementById('uploadStatus').style.color='var(--green)';
+  drawChart();
+  setTimeout(()=>{document.getElementById('uploadStatus').textContent='Waiting...';document.getElementById('uploadStatus').style.color='var(--text2)';},2000);
+}
+
+// Initial data
+for(let i=0;i<10;i++) history.push(generatePoint());
+doUpload();
+
+// Countdown
+setInterval(()=>{
+  countdown--;
+  if(countdown<=0){countdown=15;doUpload();}
+  document.getElementById('countdown').textContent=countdown+'s';
+},1000);
+
+// ── Simple Sim Logic ──
+(function(){
+  const s = document.getElementById('sim10Serial');
+  if(!s) return;
+  s.textContent = "Connecting to WiFi...\n";
+  setTimeout(()=>{
+    s.textContent += "Connected!\nIP Address: 192.168.1.105\n\n";
+    setInterval(()=>{
+      const t = (20 + Math.random()*5).toFixed(2);
+      s.textContent += `Temp: ${t} C\nConnecting to api.thingspeak.com...\n`;
+      s.scrollTop = s.scrollHeight;
+      setTimeout(()=>{
+        s.textContent += "GET /update?api_key=YOUR_API_KEY&field1=" + t + " HTTP/1.1\n";
+        s.textContent += "HTTP/1.1 200 OK\nChannel update successful.\n\n";
+        s.scrollTop = s.scrollHeight;
+        if(s.textContent.length > 1000) s.textContent = s.textContent.substring(s.textContent.length - 800);
+      }, 500);
+    }, 5000); // 5s loop for active demo
+  }, 1000);
+})();
+</script>
+<style>
+.pipeline-step{flex:1;min-width:100px;background:var(--bg2);border:1px solid var(--border);border-top:3px solid var(--pc,var(--accent));border-radius:10px;padding:12px 10px;text-align:center;display:flex;flex-direction:column;gap:4px}
+.ps-icon{font-size:22px}
+.ps-label{font-size:12px;font-weight:600;color:var(--text)}
+.ps-detail{font-size:10px;color:var(--text2);line-height:1.4}
+.ps-arrow{display:flex;align-items:center;font-size:18px;color:var(--text3);padding:0 4px}
+</style>
+</body>
+</html>

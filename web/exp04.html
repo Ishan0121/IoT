@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Exp 04 — 4-Way Traffic Light | IoT Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.wrap{padding:1rem 0;display:flex;flex-direction:column;gap:16px}
+.top-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.sim-card{background:var(--bg4);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.sim-title{font-size:13px;font-weight:500;color:var(--text2)}
+canvas#road{border-radius:8px;display:block;max-width:100%}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{font-size:12px;padding:5px 14px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text);cursor:pointer;transition:background .15s;font-family:Inter,sans-serif}
+.btn:hover{background:rgba(255,255,255,.06)}
+.phase-tag{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:500}
+.phase-ns{background:rgba(34,197,94,.15);color:#22c55e}
+.phase-y{background:rgba(245,158,11,.15);color:#f59e0b}
+.phase-ew{background:rgba(79,142,247,.15);color:#4f8ef7}
+.pin-table{width:100%;border-collapse:collapse;font-size:12px}
+.pin-table th{text-align:left;padding:4px 6px;color:var(--text2);font-weight:500;border-bottom:1px solid var(--border)}
+.pin-table td{padding:4px 6px;color:var(--text);border-bottom:1px solid var(--border)}
+.pin-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px;vertical-align:middle}
+.code-box{background:#0c111d;border-radius:8px;padding:12px;font-size:11px;font-family:'JetBrains Mono',monospace;color:#cdd9e5;overflow-x:auto;white-space:pre;line-height:1.6;border:1px solid var(--border)}
+.timer-bar-wrap{height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.timer-bar{height:100%;border-radius:3px;transition:width .1s linear}
+.stat-row{display:flex;gap:8px;flex-wrap:wrap}
+.stat-item{flex:1;min-width:80px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.stat-num{font-size:18px;font-weight:500;color:var(--text)}
+.stat-lbl{font-size:11px;color:var(--text2)}
+@media(max-width:500px){.top-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="topnav">
+  <a href="exp03.html">← Exp 03</a>
+  <div class="nav-exp-id">Exp 04 / 10</div>
+  <a href="exp05.html">Exp 05 →</a>
+</nav>
+<header class="exp-header">
+  <div class="exp-badge">Experiment 04</div>
+  <h1>4-Way Traffic Light<br>Simulation with Arduino</h1>
+  <p class="exp-subtitle">Implement a Finite State Machine (FSM) to control a 4-way intersection with safety all-red buffers and emergency override.</p>
+  <div class="exp-meta-row">
+    <span class="meta-pill">🎯 FSM · Arrays · Helper Functions</span>
+    <span class="meta-pill diff-intermediate">Intermediate</span>
+    <span class="meta-pill">Pins 2–13</span>
+  </div>
+</header>
+
+<main class="exp-main">
+
+<section class="section">
+  <h2 class="section-title">🟢 Simple Solution — 6 Pins, delay()-based</h2>
+  <div class="solution-banner simple">⭐ Start Here — N/S and E/W share 3 pins each (6 total). Pure <code>delay()</code>, no helper functions.</div>
+  <!-- Simple 2-direction sim -->
+  <div class="sim-frame" style="margin-bottom:14px">
+    <div style="padding:14px 16px;display:flex;gap:20px;align-items:center;flex-wrap:wrap">
+      <canvas id="simpleRoad" width="240" height="240" style="border-radius:8px;background:#0c111d;flex-shrink:0"></canvas>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">6 Pin Wiring</div>
+        <div style="display:grid;grid-template-columns:auto auto auto;gap:4px 10px;font-size:11px;font-family:'JetBrains Mono',monospace">
+          <span style="color:var(--text3)">NS_RED</span><span style="color:var(--text2)">=</span><span style="color:var(--red)">Pin 2</span>
+          <span style="color:var(--text3)">NS_YEL</span><span style="color:var(--text2)">=</span><span style="color:var(--amber)">Pin 3</span>
+          <span style="color:var(--text3)">NS_GRN</span><span style="color:var(--text2)">=</span><span style="color:var(--green)">Pin 4</span>
+          <span style="color:var(--text3)">EW_RED</span><span style="color:var(--text2)">=</span><span style="color:var(--red)">Pin 5</span>
+          <span style="color:var(--text3)">EW_YEL</span><span style="color:var(--text2)">=</span><span style="color:var(--amber)">Pin 6</span>
+          <span style="color:var(--text3)">EW_GRN</span><span style="color:var(--text2)">=</span><span style="color:var(--green)">Pin 7</span>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text2)">Phase: <span id="simplePhaseLabel" style="font-weight:600;color:var(--green)">N/S GREEN</span></div>
+        <div style="margin-top:6px" class="timer-bar-wrap"><div id="simpleBar" class="timer-bar" style="width:100%;background:#22c55e"></div></div>
+      </div>
+    </div>
+    <div class="sim-controls">
+      <button class="sim-btn" onclick="simpleReset()">↺ Reset</button>
+      <span style="font-size:11px;color:var(--text3)">Simple 6-pin simulation</span>
+    </div>
+  </div>
+  <div class="code-container">
+    <div class="code-header"><span class="code-filename">simple.ino — Exp 04 (Beginner)</span><button class="copy-btn" onclick="copyCode('code04s')">Copy</button></div>
+    <pre class="code-block" id="code04s"><span class="cm">// Simple 4-Way Traffic Light — 6 pins only
+// N/S share pins:  Red=2, Yellow=3, Green=4
+// E/W share pins:  Red=5, Yellow=6, Green=7</span>
+
+<span class="ck">const int</span> NS_RED=2, NS_YEL=3, NS_GRN=4;
+<span class="ck">const int</span> EW_RED=5, EW_YEL=6, EW_GRN=7;
+<span class="ck">const int</span> T_GREEN=5000, T_YELLOW=2000;
+
+<span class="cm">// Set a pair (N/S or E/W) to one color</span>
+<span class="ck">void</span> <span class="cf">setNS</span>(<span class="ck">int</span> r,<span class="ck">int</span> y,<span class="ck">int</span> g){
+  digitalWrite(NS_RED,r); digitalWrite(NS_YEL,y); digitalWrite(NS_GRN,g);
+}
+<span class="ck">void</span> <span class="cf">setEW</span>(<span class="ck">int</span> r,<span class="ck">int</span> y,<span class="ck">int</span> g){
+  digitalWrite(EW_RED,r); digitalWrite(EW_YEL,y); digitalWrite(EW_GRN,g);
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  <span class="ck">for</span>(<span class="ck">int</span> p=2; p&lt;=7; p++) pinMode(p, OUTPUT);
+  setNS(HIGH,LOW,LOW); setEW(HIGH,LOW,LOW); <span class="cm">// All red to start</span>
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="cm">// Phase 1: N/S Green, E/W Red</span>
+  setNS(LOW,LOW,HIGH); setEW(HIGH,LOW,LOW); delay(T_GREEN);
+  <span class="cm">// Phase 2: N/S Yellow, E/W Red</span>
+  setNS(LOW,HIGH,LOW); setEW(HIGH,LOW,LOW); delay(T_YELLOW);
+  <span class="cm">// All Red buffer</span>
+  setNS(HIGH,LOW,LOW); setEW(HIGH,LOW,LOW); delay(500);
+
+  <span class="cm">// Phase 3: E/W Green, N/S Red</span>
+  setNS(HIGH,LOW,LOW); setEW(LOW,LOW,HIGH); delay(T_GREEN);
+  <span class="cm">// Phase 4: E/W Yellow, N/S Red</span>
+  setNS(HIGH,LOW,LOW); setEW(LOW,HIGH,LOW); delay(T_YELLOW);
+  <span class="cm">// All Red buffer</span>
+  setNS(HIGH,LOW,LOW); setEW(HIGH,LOW,LOW); delay(500);
+}</pre>
+  </div>
+</section>
+
+<!-- ADVANCED SOLUTION -->
+<section class="section">
+  <h2 class="section-title">🚦 Live Intersection Simulation</h2>
+  <div class="wrap">
+    <div class="top-row">
+      <div class="sim-card">
+        <div class="sim-title">Intersection simulation</div>
+        <canvas id="road" width="280" height="280"
+                style="width:100%;max-width:280px;height:auto;display:block;margin:0 auto;border-radius:8px"></canvas>
+        <div class="controls">
+          <button class="btn" id="btnPlay" onclick="togglePlay()">⏸ Pause</button>
+          <button class="btn" onclick="resetSim()">↺ Reset</button>
+          <button class="btn" id="btnEmerg" onclick="toggleEmergency()" style="color:var(--red);border-color:rgba(239,68,68,0.5)">🚨 Emergency (A0)</button>
+          <span id="phaseTag" class="phase-tag phase-ns">Phase: N/S Green</span>
+        </div>
+        <div class="timer-bar-wrap"><div class="timer-bar" id="timerBar" style="width:100%;background:#22c55e"></div></div>
+      </div>
+      <div class="sim-card">
+        <div class="sim-title">Arduino UNO R3 — pin map</div>
+        <table class="pin-table">
+          <thead><tr><th>Pin</th><th>Light</th><th>Direction</th></tr></thead>
+          <tbody>
+            <tr><td>2</td><td><span class="pin-dot" style="background:#ef4444"></span>Red</td><td>North</td></tr>
+            <tr><td>3</td><td><span class="pin-dot" style="background:#f59e0b"></span>Yellow</td><td>North</td></tr>
+            <tr><td>4</td><td><span class="pin-dot" style="background:#22c55e"></span>Green</td><td>North</td></tr>
+            <tr><td>5</td><td><span class="pin-dot" style="background:#ef4444"></span>Red</td><td>South</td></tr>
+            <tr><td>6</td><td><span class="pin-dot" style="background:#f59e0b"></span>Yellow</td><td>South</td></tr>
+            <tr><td>7</td><td><span class="pin-dot" style="background:#22c55e"></span>Green</td><td>South</td></tr>
+            <tr><td>8</td><td><span class="pin-dot" style="background:#ef4444"></span>Red</td><td>East</td></tr>
+            <tr><td>9</td><td><span class="pin-dot" style="background:#f59e0b"></span>Yellow</td><td>East</td></tr>
+            <tr><td>10</td><td><span class="pin-dot" style="background:#22c55e"></span>Green</td><td>East</td></tr>
+            <tr><td>11</td><td><span class="pin-dot" style="background:#ef4444"></span>Red</td><td>West</td></tr>
+            <tr><td>12</td><td><span class="pin-dot" style="background:#f59e0b"></span>Yellow</td><td>West</td></tr>
+            <tr><td>13</td><td><span class="pin-dot" style="background:#22c55e"></span>Green</td><td>West</td></tr>
+          </tbody>
+        </table>
+        <div class="sim-title" style="margin-top:6px">Cycle counters</div>
+        <div class="stat-row">
+          <div class="stat-item"><div class="stat-num" id="cntNS">0</div><div class="stat-lbl">N/S cycles</div></div>
+          <div class="stat-item"><div class="stat-num" id="cntEW">0</div><div class="stat-lbl">E/W cycles</div></div>
+          <div class="stat-item"><div class="stat-num" id="cntTotal">0</div><div class="stat-lbl">Total phases</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SIMPLE SOLUTION -->
+<section class="section">
+  <h2 class="section-title">💾 Advanced Solution — 12 Pins + FSM + Emergency</h2>
+  <div class="solution-banner advanced">🚀 Advanced — separate pins for N, S, E, W (12 total). Helper functions, arrays, and emergency override button.</div>
+    <pre class="code-block" id="code04"><span class="cm">// Experiment 04 — 4-Way Traffic Light
+// North: R=2,Y=3,G=4  South: R=5,Y=6,G=7
+// East:  R=8,Y=9,G=10 West: R=11,Y=12,G=13
+// Emergency btn: A0 (INPUT_PULLUP)</span>
+
+<span class="ck">const int</span> N_RED=2,N_YEL=3,N_GRN=4;
+<span class="ck">const int</span> S_RED=5,S_YEL=6,S_GRN=7;
+<span class="ck">const int</span> E_RED=8,E_YEL=9,E_GRN=10;
+<span class="ck">const int</span> W_RED=11,W_YEL=12,W_GRN=13;
+<span class="ck">const int</span> EMERGENCY_BTN = A0;
+<span class="ck">const int</span> ALL_PINS[] = {2,3,4,5,6,7,8,9,10,11,12,13};
+
+<span class="ck">const int</span> GREEN_TIME=5000, YELLOW_TIME=2000, ALL_RED_T=1000;
+<span class="ck">static int</span> cycleCount=0;
+
+<span class="ck">bool</span> <span class="cf">isEmergency</span>(){return digitalRead(EMERGENCY_BTN)==LOW;}
+
+<span class="cm">// color: 0=RED, 1=YELLOW, 2=GREEN</span>
+<span class="ck">void</span> <span class="cf">setSignal</span>(<span class="ck">int</span> r,<span class="ck">int</span> y,<span class="ck">int</span> g,<span class="ck">int</span> color){
+  digitalWrite(r, color==0?HIGH:LOW);
+  digitalWrite(y, color==1?HIGH:LOW);
+  digitalWrite(g, color==2?HIGH:LOW);
+}
+
+<span class="ck">void</span> <span class="cf">allRed</span>(){
+  setSignal(N_RED,N_YEL,N_GRN,0); setSignal(S_RED,S_YEL,S_GRN,0);
+  setSignal(E_RED,E_YEL,E_GRN,0); setSignal(W_RED,W_YEL,W_GRN,0);
+  Serial.println(F(<span class="cs">"[ALL RED]"</span>)); delay(ALL_RED_T);
+}
+
+<span class="ck">void</span> <span class="cf">phaseNS_Green</span>(){
+  if(isEmergency())return;
+  setSignal(N_RED,N_YEL,N_GRN,2); setSignal(S_RED,S_YEL,S_GRN,2);
+  setSignal(E_RED,E_YEL,E_GRN,0); setSignal(W_RED,W_YEL,W_GRN,0);
+  Serial.println(F(<span class="cs">"[P1] N/S GREEN"</span>)); delay(GREEN_TIME);
+}
+<span class="ck">void</span> <span class="cf">phaseNS_Yellow</span>(){
+  if(isEmergency())return;
+  setSignal(N_RED,N_YEL,N_GRN,1); setSignal(S_RED,S_YEL,S_GRN,1);
+  setSignal(E_RED,E_YEL,E_GRN,0); setSignal(W_RED,W_YEL,W_GRN,0);
+  Serial.println(F(<span class="cs">"[P2] N/S YELLOW"</span>)); delay(YELLOW_TIME);
+}
+<span class="ck">void</span> <span class="cf">phaseEW_Green</span>(){
+  if(isEmergency())return;
+  setSignal(N_RED,N_YEL,N_GRN,0); setSignal(S_RED,S_YEL,S_GRN,0);
+  setSignal(E_RED,E_YEL,E_GRN,2); setSignal(W_RED,W_YEL,W_GRN,2);
+  Serial.println(F(<span class="cs">"[P3] E/W GREEN"</span>)); delay(GREEN_TIME);
+}
+<span class="ck">void</span> <span class="cf">phaseEW_Yellow</span>(){
+  if(isEmergency())return;
+  setSignal(N_RED,N_YEL,N_GRN,0); setSignal(S_RED,S_YEL,S_GRN,0);
+  setSignal(E_RED,E_YEL,E_GRN,1); setSignal(W_RED,W_YEL,W_GRN,1);
+  Serial.println(F(<span class="cs">"[P4] E/W YELLOW"</span>)); delay(YELLOW_TIME);
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">9600</span>);
+  for(<span class="ck">int</span> i=0;i&lt;12;i++) pinMode(ALL_PINS[i],OUTPUT);
+  pinMode(EMERGENCY_BTN,INPUT_PULLUP);
+  allRed();
+  Serial.println(F(<span class="cs">"=== 4-Way Traffic Light Ready ==="</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  cycleCount++;
+  allRed(); phaseNS_Green(); phaseNS_Yellow();
+  allRed(); phaseEW_Green(); phaseEW_Yellow();
+}</pre>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📊 FSM Flowchart</h2>
+  <div class="flowchart">
+    <div class="fc-start">START — setup()</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-box">Set 12 pins OUTPUT · allRed() · Serial init</div>
+    <div class="fc-arrow">↓</div>
+    <div class="fc-loop-label">loop() FSM Cycle</div>
+    <div class="fc-loop-body" style="gap:6px">
+      <div class="fc-box-sm" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--red)">ALL RED — 1s safety buffer</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box-sm" style="background:rgba(34,197,94,.1);border-color:rgba(34,197,94,.3);color:var(--green)">N/S GREEN — 5s</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box-sm" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:var(--amber)">N/S YELLOW — 2s</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box-sm" style="background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--red)">ALL RED — 1s safety buffer</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box-sm" style="background:rgba(79,142,247,.1);border-color:rgba(79,142,247,.3);color:var(--accent)">E/W GREEN — 5s</div>
+      <div style="font-size:18px;color:var(--text3)">↓</div>
+      <div class="fc-box-sm" style="background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.3);color:var(--amber)">E/W YELLOW — 2s</div>
+    </div>
+    <div class="fc-arrow-back">↑ repeat forever</div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">📝 Notes & Extras</h2>
+  <div class="notes-grid">
+    <div class="note-card note-info">
+      <div class="note-title">💡 Finite State Machine (FSM)</div>
+      <div class="note-body">An FSM is a system that exists in exactly one <strong>state</strong> at a time and transitions between states on defined events/timers. Here: 6 states (NS-Green, NS-Yellow, All-Red×2, EW-Green, EW-Yellow). Each state has an associated output (which pins are HIGH) and a duration before transitioning.</div>
+    </div>
+    <div class="note-card note-warn">
+      <div class="note-title">⚠️ All-Red Safety Buffer</div>
+      <div class="note-body">NEVER transition directly from one green to another. The <strong>all-red buffer</strong> (500ms–1s) ensures vehicles that entered on green have time to clear the intersection before the opposite direction gets a green. Skipping this is dangerous in real systems.</div>
+    </div>
+    <div class="note-card note-tip">
+      <div class="note-title">🔧 Arrays for Pin Management</div>
+      <div class="note-body">With 12 LEDs, setting each individually in <code>setup()</code> is tedious. Store all pin numbers in <code>int ALL_PINS[] = {2,3,4,...,13}</code> and loop: <code>for(int i=0;i&lt;12;i++) pinMode(ALL_PINS[i],OUTPUT);</code>. Clean and scalable.</div>
+    </div>
+    <div class="note-card note-danger">
+      <div class="note-title">🚨 Emergency Override</div>
+      <div class="note-body">Add a pushbutton on A0 (INPUT_PULLUP). Check <code>digitalRead(A0)==LOW</code> at the start of each phase — if pressed, call <code>allRed()</code> for 10 seconds before resuming. This simulates emergency vehicle priority in real traffic systems.</div>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2 class="section-title">🔧 Key Functions Used</h2>
+  <div class="func-list">
+    <div class="func-item"><code class="func-sig">setSignal(r, y, g, color)</code><div class="func-desc">Helper function: sets RED/YELLOW/GREEN pin states for one direction. <code>color</code>: 0=RED, 1=YELLOW, 2=GREEN. Reduces 12 digitalWrite calls to 1 readable call.</div></div>
+    <div class="func-item"><code class="func-sig">allRed()</code><div class="func-desc">Sets all 4 directions to RED. Called as safety buffer between phase transitions. Essential for preventing simultaneous greens.</div></div>
+    <div class="func-item"><code class="func-sig">delay(ms)</code><div class="func-desc">Holds the current phase for its designated duration. GREEN=5000ms, YELLOW=2000ms, ALL_RED=1000ms.</div></div>
+    <div class="func-item"><code class="func-sig">Serial.println(F("..."))</code><div class="func-desc">Logs current phase to Serial Monitor. F() macro stores string in Flash to save SRAM.</div></div>
+    <div class="func-item"><code class="func-sig">digitalRead(EMERGENCY_BTN)</code><div class="func-desc">Reads button state. With INPUT_PULLUP, returns LOW when pressed. Checked at start of each phase for emergency override.</div></div>
+  </div>
+</section>
+
+</main>
+
+<footer class="exp-footer">
+  <a href="exp03.html">← Exp 03</a>
+  <span>Exp 04 of 10 · Traffic Light</span>
+  <a href="exp05.html">Exp 05 →</a>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+const cv=document.getElementById('road');
+const {ctx,W,H}=hiDPI(cv);
+const CX=W/2,CY=H/2,RW=60;
+const PHASES=[
+  {name:'N/S Green',dur:5000,ns:[0,0,1],ew:[1,0,0],tag:'phase-ns',bar:'#22c55e'},
+  {name:'N/S Yellow',dur:2000,ns:[0,1,0],ew:[1,0,0],tag:'phase-y',bar:'#f59e0b'},
+  {name:'All Red',dur:500,ns:[1,0,0],ew:[1,0,0],tag:'phase-y',bar:'#5a6477'},
+  {name:'E/W Green',dur:5000,ns:[1,0,0],ew:[0,0,1],tag:'phase-ew',bar:'#4f8ef7'},
+  {name:'E/W Yellow',dur:2000,ns:[1,0,0],ew:[0,1,0],tag:'phase-y',bar:'#f59e0b'},
+  {name:'All Red',dur:500,ns:[1,0,0],ew:[1,0,0],tag:'phase-y',bar:'#5a6477'},
+];
+let phase=0,elapsed=0,last=performance.now(),running=true;
+let cntNS=0,cntEW=0,total=0;
+let emergency=false;
+
+function draw(){
+  const p=PHASES[phase];
+  const ns=emergency ? [1,0,0] : p.ns;
+  const ew=emergency ? [1,0,0] : p.ew;
+  const dark=matchMedia('(prefers-color-scheme:dark)').matches;
+  const road=dark?'#2C2C2A':'#D3D1C7';
+  const lane=dark?'#F1EFE8':'#888780';
+  const grass=dark?'#1a2218':'#c8e8b0';
+  ctx.fillStyle=grass;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=road;
+  ctx.fillRect(CX-RW/2,0,RW,H);ctx.fillRect(0,CY-RW/2,W,RW);
+  ctx.setLineDash([14,10]);ctx.strokeStyle=lane;ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(CX,0);ctx.lineTo(CX,CY-RW/2-2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX,CY+RW/2+2);ctx.lineTo(CX,H);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,CY);ctx.lineTo(CX-RW/2-2,CY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX+RW/2+2,CY);ctx.lineTo(W,CY);ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=road;ctx.fillRect(CX-RW/2,CY-RW/2,RW,RW);
+  function drawLight(x,y,rot,lights){
+    ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+    const lw=14,lh=38,lx=-7,ly=-19;
+    ctx.fillStyle='#1a1a1a';roundRect(ctx,lx,ly,lw,lh,3);ctx.fill();
+    [[0,lights[2],'#22c55e'],[1,lights[1],'#f59e0b'],[2,lights[0],'#ef4444']].forEach(([i,on,col])=>{
+      ctx.beginPath();ctx.arc(0,ly+6+i*13,4.5,0,Math.PI*2);
+      ctx.fillStyle=on?col:'#2C2C2A';ctx.fill();
+      if(on){ctx.globalAlpha=.25;ctx.beginPath();ctx.arc(0,ly+6+i*13,8,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();ctx.globalAlpha=1;}
+    });
+    ctx.restore();
+  }
+  drawLight(CX-RW/2-14,CY-RW/2-14,0,ns);
+  drawLight(CX+RW/2+14,CY+RW/2+14,Math.PI,ns);
+  drawLight(CX+RW/2+14,CY-RW/2-14,Math.PI/2,ew);
+  drawLight(CX-RW/2-14,CY+RW/2+14,-Math.PI/2,ew);
+  ctx.font='bold 10px Inter,sans-serif';ctx.textAlign='center';
+  ctx.fillStyle=dark?'#B4B2A9':'#5F5E5A';
+  ctx.fillText('N',CX,14);ctx.fillText('S',CX,H-6);
+  ctx.fillText('W',10,CY+4);ctx.fillText('E',W-10,CY+4);
+}
+function updateUI(){
+  const p=PHASES[phase];
+  const pct=Math.max(0,1-(elapsed/p.dur));
+  
+  const tag=document.getElementById('phaseTag');
+  if(emergency) {
+    document.getElementById('timerBar').style.width='100%';
+    document.getElementById('timerBar').style.background='#ef4444';
+    tag.textContent='Phase: EMERGENCY (ALL RED)';
+    tag.className='phase-tag';
+    tag.style.color='var(--red)';
+  } else {
+    document.getElementById('timerBar').style.width=(pct*100)+'%';
+    document.getElementById('timerBar').style.background=p.bar;
+    tag.textContent='Phase: '+p.name;
+    tag.className='phase-tag '+p.tag;
+    tag.style.color='';
+  }
+  document.getElementById('cntNS').textContent=cntNS;
+  document.getElementById('cntEW').textContent=cntEW;
+  document.getElementById('cntTotal').textContent=total;
+}
+function tick(now){
+  if(running && !emergency){
+    const dt=Math.min(now-last,200);elapsed+=dt;
+    if(elapsed>=PHASES[phase].dur){
+      elapsed=0;const prev=phase;phase=(phase+1)%6;total++;
+      if(prev===0)cntNS++;if(prev===3)cntEW++;
+    }
+  }
+  last=now;draw();updateUI();requestAnimationFrame(tick);
+}
+function togglePlay(){running=!running;last=performance.now();document.getElementById('btnPlay').textContent=running?'⏸ Pause':'▶ Play';}
+function toggleEmergency() {
+  emergency = !emergency;
+  const btn = document.getElementById('btnEmerg');
+  if(emergency) {
+    btn.style.background = 'rgba(239,68,68,0.15)';
+    btn.style.borderColor = 'rgba(239,68,68,0.8)';
+  } else {
+    btn.style.background = '';
+    btn.style.borderColor = 'rgba(239,68,68,0.5)';
+    last=performance.now(); // prevent sudden jump
+  }
+}
+function resetSim(){phase=0;elapsed=0;cntNS=0;cntEW=0;total=0;last=performance.now();emergency=false;document.getElementById('btnEmerg').style.background='';document.getElementById('btnEmerg').style.borderColor='rgba(239,68,68,0.5)';}
+requestAnimationFrame(tick);
+
+// ── Simple 6-pin simulation ─────────────────
+const sc2=document.getElementById('simpleRoad');
+const sc2x=sc2?(()=>{const {ctx:c}=hiDPI(sc2);return c;})():null;
+const SIMPLE_PHASES=[
+  {name:'N/S GREEN',dur:5000,ns:[0,0,1],ew:[1,0,0],bar:'#22c55e'},
+  {name:'N/S YELLOW',dur:2000,ns:[0,1,0],ew:[1,0,0],bar:'#f59e0b'},
+  {name:'ALL RED',dur:500,ns:[1,0,0],ew:[1,0,0],bar:'#5a6477'},
+  {name:'E/W GREEN',dur:5000,ns:[1,0,0],ew:[0,0,1],bar:'#4f8ef7'},
+  {name:'E/W YELLOW',dur:2000,ns:[1,0,0],ew:[0,1,0],bar:'#f59e0b'},
+  {name:'ALL RED',dur:500,ns:[1,0,0],ew:[1,0,0],bar:'#5a6477'},
+];
+let sp=0,se=0,sl=performance.now(),sr=true;
+function drawSimple(){
+  if(!sc2x)return;
+  const p=SIMPLE_PHASES[sp],ns=p.ns,ew=p.ew;
+  const W=240,H=240,CX=120,CY=120,RW=50;
+  sc2x.fillStyle='#0a180a';sc2x.fillRect(0,0,W,H);
+  sc2x.fillStyle='#2a2a28';
+  sc2x.fillRect(CX-RW/2,0,RW,H);sc2x.fillRect(0,CY-RW/2,W,RW);
+  sc2x.setLineDash([10,8]);sc2x.strokeStyle='rgba(255,255,200,0.2)';sc2x.lineWidth=1.5;
+  sc2x.beginPath();sc2x.moveTo(CX,0);sc2x.lineTo(CX,CY-RW/2);sc2x.stroke();
+  sc2x.beginPath();sc2x.moveTo(CX,CY+RW/2);sc2x.lineTo(CX,H);sc2x.stroke();
+  sc2x.beginPath();sc2x.moveTo(0,CY);sc2x.lineTo(CX-RW/2,CY);sc2x.stroke();
+  sc2x.beginPath();sc2x.moveTo(CX+RW/2,CY);sc2x.lineTo(W,CY);sc2x.stroke();
+  sc2x.setLineDash([]);
+  sc2x.fillStyle='#2a2a28';sc2x.fillRect(CX-RW/2,CY-RW/2,RW,RW);
+  // Traffic light boxes
+  function drawL(x,y,rot,lights){
+    sc2x.save();sc2x.translate(x,y);sc2x.rotate(rot);
+    sc2x.fillStyle='#111';roundRect(sc2x,-6,-17,12,34,3);sc2x.fill();
+    [[0,lights[2],'#22c55e'],[1,lights[1],'#f59e0b'],[2,lights[0],'#ef4444']].forEach(([i,on,col])=>{
+      sc2x.beginPath();sc2x.arc(0,-11+i*11,4,0,Math.PI*2);
+      sc2x.fillStyle=on?col:'#222';sc2x.fill();
+      if(on){sc2x.globalAlpha=.2;sc2x.beginPath();sc2x.arc(0,-11+i*11,7,0,Math.PI*2);sc2x.fillStyle=col;sc2x.fill();sc2x.globalAlpha=1;}
+    });sc2x.restore();
+  }
+  drawL(CX-RW/2-12,CY-RW/2-12,0,ns);
+  drawL(CX+RW/2+12,CY+RW/2+12,Math.PI,ns);
+  drawL(CX+RW/2+12,CY-RW/2-12,Math.PI/2,ew);
+  drawL(CX-RW/2-12,CY+RW/2+12,-Math.PI/2,ew);
+  sc2x.font='bold 9px Inter';sc2x.textAlign='center';sc2x.fillStyle='rgba(255,255,255,0.4)';
+  sc2x.fillText('N',CX,12);sc2x.fillText('S',CX,H-4);
+  sc2x.fillText('W',8,CY+4);sc2x.fillText('E',W-8,CY+4);
+}
+function tickSimple(now){
+  const dt=Math.min(now-sl,200);se+=dt;sl=now;
+  if(se>=SIMPLE_PHASES[sp].dur){se=0;sp=(sp+1)%6;}
+  drawSimple();
+  const pct=Math.max(0,1-(se/SIMPLE_PHASES[sp].dur));
+  const bar=document.getElementById('simpleBar');
+  if(bar){bar.style.width=(pct*100)+'%';bar.style.background=SIMPLE_PHASES[sp].bar;}
+  const lbl=document.getElementById('simplePhaseLabel');
+  if(lbl){lbl.textContent=SIMPLE_PHASES[sp].name;
+    lbl.style.color=SIMPLE_PHASES[sp].bar==='#22c55e'?'var(--green)':SIMPLE_PHASES[sp].bar==='#4f8ef7'?'var(--accent)':'var(--amber)';}
+  requestAnimationFrame(tickSimple);
+}
+function simpleReset(){sp=0;se=0;sl=performance.now();}
+requestAnimationFrame(tickSimple);
+</script>
+<style>
+.solution-banner{padding:10px 14px;border-radius:8px;font-size:12.5px;margin-bottom:12px;}
+.solution-banner code{background:rgba(255,255,255,0.1);padding:1px 5px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:11px;}
+.solution-banner.simple{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);color:var(--green);}
+.solution-banner.advanced{background:rgba(79,142,247,0.08);border:1px solid rgba(79,142,247,0.25);color:var(--accent);}
+</style>
+</body>
+</html>
+
