@@ -104,50 +104,110 @@ function setupBackToTop() {
 // ─── Index page: particle hero canvas ────────────────────────────────────────
 function setupParticles(canvas) {
   if (!canvas) return;
-  const W = canvas.offsetWidth  || 1200;
-  const H = canvas.offsetHeight || 480;
+  let W = canvas.offsetWidth  || 1200;
+  let H = canvas.offsetHeight || 480;
   canvas.width  = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
-  const N = 55;
+  
+  // Mouse interaction
+  let mouse = { x: null, y: null, radius: 150 };
+  
+  window.addEventListener('mousemove', function(event) {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = event.clientX - rect.left;
+    mouse.y = event.clientY - rect.top;
+  });
+  
+  window.addEventListener('mouseleave', function() {
+    mouse.x = null;
+    mouse.y = null;
+  });
+
+  window.addEventListener('resize', function() {
+    W = canvas.offsetWidth || window.innerWidth;
+    H = canvas.offsetHeight || window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+  });
+
+  const N = 80; // Increased particle count
   const pts = Array.from({ length: N }, () => ({
     x: Math.random() * W,
     y: Math.random() * H,
-    vx: (Math.random() - 0.5) * 0.35,
-    vy: (Math.random() - 0.5) * 0.35,
-    r: Math.random() * 1.5 + 0.6
+    vx: (Math.random() - 0.5) * 0.6,
+    vy: (Math.random() - 0.5) * 0.6,
+    r: Math.random() * 2 + 0.8,
+    color: `rgba(${Math.floor(Math.random() * 50 + 79)}, ${Math.floor(Math.random() * 50 + 142)}, ${Math.floor(Math.random() * 55 + 200)}, 0.8)`
   }));
+
   function draw() {
     ctx.clearRect(0, 0, W, H);
+    
     // Draw connections
     for (let i = 0; i < N; i++) {
       for (let j = i + 1; j < N; j++) {
         const dx = pts[i].x - pts[j].x;
         const dy = pts[i].y - pts[j].y;
         const d  = Math.sqrt(dx * dx + dy * dy);
-        if (d < 140) {
+        
+        if (d < 150) {
           ctx.beginPath();
           ctx.moveTo(pts[i].x, pts[i].y);
           ctx.lineTo(pts[j].x, pts[j].y);
-          ctx.strokeStyle = `rgba(79,142,247,${0.22 * (1 - d / 140)})`;
-          ctx.lineWidth = 0.8;
+          ctx.strokeStyle = `rgba(79,142,247,${0.25 * (1 - d / 150)})`;
+          ctx.lineWidth = 1;
           ctx.stroke();
         }
       }
     }
-    // Draw dots
+    
+    // Draw dots & apply forces
     pts.forEach(p => {
       ctx.beginPath();
       ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(124,158,247,0.7)';
+      ctx.fillStyle = p.color;
       ctx.fill();
-    });
-    // Move
-    pts.forEach(p => {
+      
+      // Add subtle glow
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = p.color;
+      
+      // Mouse interaction
+      if (mouse.x != null && mouse.y != null) {
+        let dx = mouse.x - p.x;
+        let dy = mouse.y - p.y;
+        let distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance < mouse.radius) {
+          const forceDirectionX = dx / distance;
+          const forceDirectionY = dy / distance;
+          const force = (mouse.radius - distance) / mouse.radius;
+          const directionX = forceDirectionX * force * 3;
+          const directionY = forceDirectionY * force * 3;
+          p.x -= directionX;
+          p.y -= directionY;
+          
+          // Connect to mouse
+          ctx.beginPath();
+          ctx.moveTo(p.x, p.y);
+          ctx.lineTo(mouse.x, mouse.y);
+          ctx.strokeStyle = `rgba(124,158,247,${0.4 * (1 - distance / mouse.radius)})`;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
+      }
+      
+      // Reset shadow for performance
+      ctx.shadowBlur = 0;
+      
+      // Move
       p.x += p.vx; p.y += p.vy;
+      
+      // Bounce off walls smoothly
       if (p.x < 0 || p.x > W) p.vx *= -1;
       if (p.y < 0 || p.y > H) p.vy *= -1;
     });
+    
     requestAnimationFrame(draw);
   }
   draw();

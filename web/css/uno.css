@@ -273,10 +273,10 @@
 .tag-green { background-color: #bbf7d0; border-color: #16a34a; }
 .tag-white { background-color: #f8fafc; border-color: #cbd5e1; }
 .tag-pink { background-color: #fbcfe8; border-color: #db2777; }
-.tag-yellow { background-color: #fef08a; border-color: #ca8a04; }
-.tag-gray { background-color: #94a3b8; border-color: #475569; color: #fff; }
-.tag-black { background-color: #1e293b; border-color: #000; color: #fff; }
-.tag-red { background-color: #fca5a5; border-color: #dc2626; }
+.tag-yellow { background-color: #fef08aa4; border-color: #ca8a04; }
+.tag-gray { background-color: #94a3b8a1; border-color: #475569; color: #fff; }
+.tag-black { background-color: #1e293b9d; border-color: #000; color: #fff; }
+.tag-red { background-color: #ff8e8ea8; border-color: #dc2626ae; }
 
 .details {
   padding: 1%;

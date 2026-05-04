@@ -11,14 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const interactiveElements = document.querySelectorAll('.pin[data-tags], .hotspot[data-tags]');
 
   const colorMap = {
-    blue: '#3b82f6',
-    green: '#22c55e',
-    white: '#cbd5e1',
-    pink: '#ec4899',
-    yellow: '#eab308',
-    gray: '#94a3b8',
-    black: '#64748b', /* slightly lighter than black for glow */
-    red: '#ef4444'
+    blue: '#3b83f68b',
+    green: '#22c52a88',
+    white: '#cbd5e18f',
+    pink: '#ec489a95',
+    yellow: '#eab20867',
+    gray: '#94a3b87d',
+    black: '#3e4a5b6d', /* slightly lighter than black for glow */
+    red: '#ef444465'
   };
 
   let activePath = null;
