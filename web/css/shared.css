@@ -1312,6 +1312,46 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 /* ═══════════════════════════════════════════════════════
+   BOARD TOGGLE (ESP32 / ESP8266)
+   ═══════════════════════════════════════════════════════ */
+.board-toggle {
+  display: inline-flex;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px;
+  margin-bottom: 16px;
+}
+.board-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.board-toggle-btn.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79,142,247,0.3);
+}
+.board-content {
+  display: none;
+}
+.board-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════════════════════════════════════════════
    INDEX PAGE RESPONSIVE
    ═══════════════════════════════════════════════════════ */
 @media (max-width: 600px) {

@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
 <link rel="stylesheet" href="css/experiments/exp10.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
 <nav class="topnav">
@@ -19,9 +20,16 @@
   <h1>Interfacing Arduino<br>with Cloud (ThingSpeak)</h1>
   <p class="exp-subtitle">Send live sensor data to ThingSpeak IoT cloud over WiFi using ESP8266. View real-time graphs from anywhere in the world via HTTP REST API.</p>
   <div class="exp-meta-row">
-    <span class="meta-pill">🎯 ESP8266 · ThingSpeak · WiFi · HTTP REST</span>
+    <span class="meta-pill">🎯 ESP32/ESP8266 · ThingSpeak · WiFi · HTTP REST</span>
     <span class="meta-pill diff-advanced">Advanced</span>
-    <span class="meta-pill">Board: NodeMCU / Wemos D1</span>
+    <span class="meta-pill">Board: ESP32 / NodeMCU / Wemos D1</span>
+  </div>
+  <div style="display:flex; flex-direction:column; align-items:center; margin-top:24px;">
+    <div style="font-size:11px; color:var(--text2); margin-bottom:8px; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Choose your board for WiFi use</div>
+    <div class="board-toggle">
+      <button class="board-toggle-btn active" data-board="esp32" onclick="setBoard('esp32')">ESP32</button>
+      <button class="board-toggle-btn" data-board="esp8266" onclick="setBoard('esp8266')">ESP8266</button>
+    </div>
   </div>
 </header>
 
@@ -45,7 +53,7 @@
       <div class="ps-arrow">→</div>
       <div class="pipeline-step" style="--pc:#f59e0b">
         <div class="ps-icon">🔌</div>
-        <div class="ps-label">ESP8266</div>
+        <div class="ps-label">ESP32 / ESP8266</div>
         <div class="ps-detail">Reads sensor, packages data</div>
       </div>
       <div class="ps-arrow">→</div>
@@ -71,18 +79,36 @@
 </section>
 
 <section class="section reveal">
-  <h2 class="section-title">⚙️ ESP8266 Setup in Arduino IDE</h2>
-  <div class="code-container">
-    <div class="code-header">
-      <span class="code-filename">Board Manager URL</span>
-      <button class="copy-btn" onclick="copyCode('code10url')">Copy</button>
+  <h2 class="section-title">⚙️ Board Setup in Arduino IDE</h2>
+  
+  <div class="board-content active" data-board="esp32">
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-filename">ESP32 Board Manager</span>
+        <button class="copy-btn" onclick="copyCode('code10url-esp32')">Copy</button>
+      </div>
+      <pre class="code-block" id="code10url-esp32">File → Preferences → Additional Board Manager URLs:
+https://espressif.github.io/arduino-esp32/package_esp32_index.json
+
+Tools → Board → Boards Manager → search "esp32" → Install (by Espressif)
+Tools → Board → ESP32 Arduino → DOIT ESP32 DEVKIT V1 (or your specific board)
+Tools → Upload Speed → 115200</pre>
     </div>
-    <pre class="code-block" id="code10url">File → Preferences → Additional Board Manager URLs:
+  </div>
+
+  <div class="board-content" data-board="esp8266">
+    <div class="code-container">
+      <div class="code-header">
+        <span class="code-filename">ESP8266 Board Manager</span>
+        <button class="copy-btn" onclick="copyCode('code10url')">Copy</button>
+      </div>
+      <pre class="code-block" id="code10url">File → Preferences → Additional Board Manager URLs:
 http://arduino.esp8266.com/stable/package_esp8266com_index.json
 
 Tools → Board → Boards Manager → search "esp8266" → Install
 Tools → Board → ESP8266 Boards → NodeMCU 1.0 (or Wemos D1 Mini)
 Tools → Upload Speed → 115200</pre>
+    </div>
   </div>
 </section>
 
@@ -99,9 +125,54 @@ Tools → Upload Speed → 115200</pre>
       <span style="font-size:11px;color:var(--text3)">Simulates WiFi connection and basic ThingSpeak GET request loop</span>
     </div>
   </div>
-  <div class="code-container">
-    <div class="code-header"><span class="code-filename">simple.ino — Exp 10 (Beginner)</span><button class="copy-btn" onclick="copyCode('code10s')">Copy</button></div>
-    <pre class="code-block" id="code10s"><span class="cm">// Simple ESP8266 ThingSpeak Upload
+  <div class="board-content active" data-board="esp32">
+    <div class="code-container">
+      <div class="code-header"><span class="code-filename">simple.ino — Exp 10 (ESP32)</span><button class="copy-btn" onclick="copyCode('code10s-esp32')">Copy</button></div>
+      <pre class="code-block" id="code10s-esp32"><span class="cm">// Simple ESP32 ThingSpeak Upload
+// Upload temperature (DHT11 on GPIO 4) to 1 field every 15s</span>
+
+<span class="cp">#include</span> &lt;WiFi.h&gt;
+<span class="cp">#include</span> &lt;DHT.h&gt;
+
+<span class="ck">const char*</span> SSID    = <span class="cs">&quot;YOUR_WIFI_SSID&quot;</span>;
+<span class="ck">const char*</span> PASS    = <span class="cs">&quot;YOUR_WIFI_PASSWORD&quot;</span>;
+<span class="ck">const char*</span> API_KEY = <span class="cs">&quot;YOUR_WRITE_API_KEY&quot;</span>;
+
+DHT dht(4, DHT11); <span class="cm">// GPIO 4</span>
+WiFiClient client;
+
+<span class="ck">void</span> <span class="cf">setup</span>() {
+  Serial.begin(<span class="cn">115200</span>);
+  dht.begin();
+  WiFi.begin(SSID, PASS);
+  Serial.print(<span class="cs">&quot;Connecting&quot;</span>);
+  <span class="ck">while</span>(WiFi.status() != WL_CONNECTED) { delay(<span class="cn">500</span>); Serial.print(<span class="cs">&quot;.&quot;</span>); }
+  Serial.println(<span class="cs">&quot;\nConnected! IP: &quot;</span> + WiFi.localIP().toString());
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>() {
+  <span class="ck">float</span> temp = dht.readTemperature();
+  <span class="ck">if</span>(isnan(temp)) { Serial.println(<span class="cs">&quot;DHT error!&quot;</span>); delay(<span class="cn">15000</span>); <span class="ck">return</span>; }
+
+  <span class="cm">// Build ThingSpeak URL with field1=temperature</span>
+  <span class="ck">if</span>(client.connect(<span class="cs">&quot;api.thingspeak.com&quot;</span>, <span class="cn">80</span>)) {
+    String url = <span class="cs">&quot;/update?api_key=&quot;</span> + String(API_KEY) + <span class="cs">&quot;&amp;field1=&quot;</span> + String(temp);
+    client.println(<span class="cs">&quot;GET &quot;</span> + url + <span class="cs">&quot; HTTP/1.1&quot;</span>);
+    client.println(<span class="cs">&quot;Host: api.thingspeak.com&quot;</span>);
+    client.println(<span class="cs">&quot;Connection: close&quot;</span>);
+    client.println();
+    Serial.println(<span class="cs">&quot;Sent: &quot;</span> + String(temp) + <span class="cs">&quot;C&quot;</span>);
+    client.stop();
+  }
+  delay(<span class="cn">15000</span>); <span class="cm">// ThingSpeak free tier minimum</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="board-content" data-board="esp8266">
+    <div class="code-container">
+      <div class="code-header"><span class="code-filename">simple.ino — Exp 10 (ESP8266)</span><button class="copy-btn" onclick="copyCode('code10s')">Copy</button></div>
+      <pre class="code-block" id="code10s"><span class="cm">// Simple ESP8266 ThingSpeak Upload
 // Upload temperature (DHT11 on D4) to 1 field every 15s</span>
 
 <span class="cp">#include</span> &lt;ESP8266WiFi.h&gt;
@@ -139,6 +210,7 @@ WiFiClient client;
   }
   delay(<span class="cn">15000</span>); <span class="cm">// ThingSpeak free tier minimum</span>
 }</pre>
+    </div>
   </div>
 </section>
 
@@ -181,9 +253,88 @@ WiFiClient client;
 <section class="section reveal">
   <h2 class="section-title">💾 Advanced Solution — 4 Fields + HTTPClient + Auto-reconnect</h2>
   <div class="solution-banner advanced">🚀 Advanced — 4 sensor fields, ESP8266HTTPClient library, auto-reconnect on WiFi drop, heat index calculation, LED status.</div>
-  <div class="code-container">
-    <div class="code-header"><span class="code-filename">program.ino — Exp 10 (ESP8266)</span><button class="copy-btn" onclick="copyCode('code10')">Copy</button></div>
-    <pre class="code-block" id="code10"><span class="cp">#include</span> &lt;ESP8266WiFi.h&gt;
+  <div class="board-content active" data-board="esp32">
+    <div class="code-container">
+      <div class="code-header"><span class="code-filename">program.ino — Exp 10 (ESP32)</span><button class="copy-btn" onclick="copyCode('code10-esp32')">Copy</button></div>
+      <pre class="code-block" id="code10-esp32"><span class="cp">#include</span> &lt;WiFi.h&gt;
+<span class="cp">#include</span> &lt;HTTPClient.h&gt;
+<span class="cp">#include</span> &lt;DHT.h&gt;
+
+<span class="cm">// ✏ FILL IN YOUR OWN VALUES:</span>
+<span class="ck">const char*</span> WIFI_SSID = <span class="cs">"YOUR_WIFI_SSID"</span>;
+<span class="ck">const char*</span> WIFI_PASS = <span class="cs">"YOUR_WIFI_PASSWORD"</span>;
+<span class="ck">const char*</span> API_KEY   = <span class="cs">"YOUR_THINGSPEAK_WRITE_API_KEY"</span>;
+
+<span class="ck">const char*</span> TS_URL = <span class="cs">"http://api.thingspeak.com/update"</span>;
+<span class="cp">#define</span> DHT_PIN 4
+<span class="cp">#define</span> LDR_PIN 34 <span class="cm">// ADC1_CH6 on ESP32</span>
+<span class="cp">#define</span> LED_PIN 2  <span class="cm">// Built-in LED on ESP32</span>
+<span class="cp">#define</span> DHTTYPE DHT11
+DHT dht(DHT_PIN, DHTTYPE);
+WiFiClient wifiClient;
+
+<span class="ck">const unsigned long</span> INTERVAL=15000UL;
+<span class="ck">unsigned long</span> lastUpload=0;
+<span class="ck">long</span> msgID=0;
+
+<span class="ck">void</span> <span class="cf">connectWiFi</span>(){
+  Serial.print(F(<span class="cs">"Connecting to WiFi"</span>));
+  WiFi.begin(WIFI_SSID,WIFI_PASS);
+  <span class="ck">int</span> tries=0;
+  <span class="ck">while</span>(WiFi.status()!=WL_CONNECTED&amp;&amp;tries++&lt;30){
+    delay(<span class="cn">500</span>);Serial.print(F(<span class="cs">"."</span>));
+  }
+  <span class="ck">if</span>(WiFi.status()==WL_CONNECTED){
+    Serial.print(F(<span class="cs">"\nIP: "</span>)); Serial.println(WiFi.localIP());
+  } <span class="ck">else</span> {Serial.println(F(<span class="cs">"\nFailed! Restarting..."</span>));delay(<span class="cn">3000</span>);ESP.restart();}
+}
+
+<span class="ck">bool</span> <span class="cf">uploadToThingSpeak</span>(<span class="ck">float</span> t,<span class="ck">float</span> h,<span class="ck">int</span> ldr,<span class="ck">float</span> hi){
+  <span class="ck">if</span>(WiFi.status()!=WL_CONNECTED){connectWiFi();return <span class="cn">false</span>;}
+  String url=String(TS_URL)
+    +<span class="cs">"?api_key="</span>+API_KEY
+    +<span class="cs">"&field1="</span>+String(t,1)
+    +<span class="cs">"&field2="</span>+String(h,1)
+    +<span class="cs">"&field3="</span>+String(ldr)
+    +<span class="cs">"&field4="</span>+String(hi,1);
+  HTTPClient http;
+  http.begin(wifiClient,url);
+  <span class="ck">int</span> code=http.GET();
+  <span class="ck">bool</span> ok=(code==HTTP_CODE_OK&amp;&amp;http.getString().toInt()&gt;0);
+  <span class="ck">if</span>(ok){msgID++;Serial.print(F(<span class="cs">"✓ Upload OK #"</span>));Serial.println(msgID);}
+  <span class="ck">else</span> Serial.println(F(<span class="cs">"✗ Upload failed"</span>));
+  http.end(); <span class="ck">return</span> ok;
+}
+
+<span class="ck">void</span> <span class="cf">setup</span>(){
+  Serial.begin(<span class="cn">115200</span>);
+  pinMode(LED_PIN,OUTPUT); digitalWrite(LED_PIN,LOW); <span class="cm">// ESP32 builtin LED is usually active HIGH</span>
+  dht.begin(); connectWiFi();
+  Serial.println(F(<span class="cs">"=== ThingSpeak Logger Ready ==="</span>));
+}
+
+<span class="ck">void</span> <span class="cf">loop</span>(){
+  <span class="ck">unsigned long</span> now=millis();
+  <span class="ck">if</span>(now-lastUpload&gt;=INTERVAL){
+    lastUpload=now;
+    <span class="ck">float</span> t=dht.readTemperature(),h=dht.readHumidity();
+    <span class="ck">if</span>(isnan(t)||isnan(h)){Serial.println(F(<span class="cs">"DHT error"</span>));return;}
+    <span class="ck">float</span> hi=dht.computeHeatIndex(t,h,false);
+    <span class="ck">int</span> ldr=analogRead(LDR_PIN);
+    Serial.print(F(<span class="cs">"T="</span>));Serial.print(t,1);Serial.print(F(<span class="cs">"°C H="</span>));
+    Serial.print(h,1);Serial.print(F(<span class="cs">"% L="</span>));Serial.println(ldr);
+    digitalWrite(LED_PIN,HIGH); delay(<span class="cn">100</span>); digitalWrite(LED_PIN,LOW);
+    uploadToThingSpeak(t,h,ldr,hi);
+  }
+  yield(); <span class="cm">// Keep WiFi stack healthy</span>
+}</pre>
+    </div>
+  </div>
+
+  <div class="board-content" data-board="esp8266">
+    <div class="code-container">
+      <div class="code-header"><span class="code-filename">program.ino — Exp 10 (ESP8266)</span><button class="copy-btn" onclick="copyCode('code10')">Copy</button></div>
+      <pre class="code-block" id="code10"><span class="cp">#include</span> &lt;ESP8266WiFi.h&gt;
 <span class="cp">#include</span> &lt;ESP8266HTTPClient.h&gt;
 <span class="cp">#include</span> &lt;WiFiClient.h&gt;
 <span class="cp">#include</span> &lt;DHT.h&gt;
@@ -256,6 +407,7 @@ WiFiClient wifiClient;
   }
   yield(); <span class="cm">// Keep ESP8266 WiFi stack healthy!</span>
 }</pre>
+    </div>
   </div>
 </section>
 
@@ -318,8 +470,8 @@ WiFiClient wifiClient;
       <div class="note-body">Your WiFi password and ThingSpeak API key should NEVER be uploaded to a public Git repository. Use a <code>config.h</code> file added to <code>.gitignore</code>, or store credentials in EEPROM at flash time. In production systems, use environment variables or a hardware secure element.</div>
     </div>
     <div class="note-card note-info">
-      <div class="note-title">💡 yield() is Critical on ESP8266</div>
-      <div class="note-body"><code>yield()</code> gives execution time back to the ESP8266 WiFi stack (LwIP). Without it in tight loops, the WiFi connection degrades and eventually drops. Unlike Arduino UNO, ESP8266 runs WiFi in software — it needs periodic CPU time to maintain the connection.</div>
+      <div class="note-title">💡 yield() is Critical on ESP Boards</div>
+      <div class="note-body"><code>yield()</code> gives execution time back to the ESP WiFi stack (LwIP). Without it in tight loops, the WiFi connection degrades and eventually drops. Unlike Arduino UNO, ESP8266 and ESP32 run WiFi in software — they need periodic CPU time to maintain the connection.</div>
     </div>
     <div class="note-card note-tip">
       <div class="note-title">⏱️ 15-Second Rate Limit</div>
@@ -339,8 +491,8 @@ WiFiClient wifiClient;
     <div class="func-item"><code class="func-sig">http.begin(wifiClient, url)</code><div class="func-desc">Initialize HTTP client with URL. The WiFiClient handles TCP connection. URL includes API key and field values as query parameters.</div></div>
     <div class="func-item"><code class="func-sig">http.GET()</code><div class="func-desc">Send HTTP GET request. Returns HTTP status code (200=OK). ThingSpeak returns the message ID as a string in the body — "0" means error or rate limited.</div></div>
     <div class="func-item"><code class="func-sig">dht.computeHeatIndex(temp, hum, false)</code><div class="func-desc">Calculate heat index (feels-like temperature) from temperature + humidity. Last parameter: false=Celsius, true=Fahrenheit. Uses Steadman formula.</div></div>
-    <div class="func-item"><code class="func-sig">yield()</code><div class="func-desc">ESP8266-specific: temporarily yield CPU to WiFi background tasks. Call at least every 50ms in busy loops. Arduino UNO doesn't need this — only ESP8266/ESP32.</div></div>
-    <div class="func-item"><code class="func-sig">ESP.restart()</code><div class="func-desc">Software reset the ESP8266. Used as recovery when WiFi fails after maximum retries — cleaner than getting stuck in an error state.</div></div>
+    <div class="func-item"><code class="func-sig">yield()</code><div class="func-desc">ESP-specific: temporarily yield CPU to WiFi background tasks. Call at least every 50ms in busy loops. Arduino UNO doesn't need this — only ESP8266/ESP32.</div></div>
+    <div class="func-item"><code class="func-sig">ESP.restart()</code><div class="func-desc">Software reset the microcontroller. Used as recovery when WiFi fails after maximum retries — cleaner than getting stuck in an error state.</div></div>
   </div>
 </section>
 
@@ -351,8 +503,16 @@ WiFiClient wifiClient;
   <a href="index.html">↩ Index</a>
 </footer>
 <script src="js/shared.js"></script>
-
-
+<script>
+  function setBoard(board) {
+    document.querySelectorAll('.board-toggle-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.board === board);
+    });
+    document.querySelectorAll('.board-content').forEach(content => {
+      content.classList.toggle('active', content.dataset.board === board);
+    });
+  }
+</script>
 <script src="js/experiments/exp10-sim.js"></script>
 </body>
 </html>
