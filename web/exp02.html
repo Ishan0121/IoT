@@ -14,7 +14,7 @@
 <body>
 <nav class="topnav">
   <a href="exp01.html" class="nav-back">← Exp 01</a>
-  <div class="nav-exp-id">Exp 02 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;">Exp 02 / 10</div>
   <a href="exp03.html" class="nav-next">Exp 03 →</a>
 </nav>
 
@@ -154,7 +154,38 @@ sudo usermod -aG dialout $USER
   </section>
 
   <!-- SIMPLE SOLUTION -->
-  <section class="section reveal">
+  
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>The Arduino IDE uses the <code>avr-gcc</code> compiler to convert C/C++ code into machine-readable hex files.</li>
+        <li>The <code>avrdude</code> utility flashes this compiled code over USB into the microcontroller's bootloader.</li>
+        <li>The Serial Monitor provides a two-way UART communication channel for real-time debugging.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>Code is compiled sequentially. Missing semicolons or mismatched brackets will halt the build pipeline.</li>
+        <li>The IDE automatically includes the core Arduino library, so you don't need to write standard C <code>main()</code> functions.</li>
+        <li>Library Manager downloads community-written code packages to easily interface with complex hardware.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Always match the baud rate in <code>Serial.begin()</code> with the Serial Monitor drop-down menu.</li>
+        <li>Enable "Show verbose output during compilation" in IDE Preferences to troubleshoot cryptic upload errors.</li>
+        <li>Use <code>Ctrl+T</code> (or Cmd+T) to auto-format your code—clean indentation prevents logic errors.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section reveal">
     <h2 class="section-title">🟢 Simple Solution — First Upload Test</h2>
     <div class="solution-banner simple">⭐ Start Here — the absolute minimum sketch to verify your IDE is installed and uploads correctly.</div>
     <div class="code-container">

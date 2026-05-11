@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Exp 09 — Working with Shields | IoT Lab</title>
+<meta name="description" content="Working with Arduino Shields — stack the W5100 Ethernet Shield to create an HTTP web server serving live sensor data over LAN.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
@@ -12,7 +13,7 @@
 <body>
 <nav class="topnav">
   <a href="exp08.html">← Exp 08</a>
-  <div class="nav-exp-id">Exp 09 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;">Exp 09 / 10</div>
   <a href="exp10.html">Exp 10 →</a>
 </nav>
 <header class="exp-header">
@@ -79,6 +80,37 @@
     <div class="fc-box">Send HTTP/1.1 200 OK + HTML dashboard page</div>
     <div class="fc-arrow">↓</div>
     <div class="fc-box" style="background:rgba(99,102,241,0.1);border-color:rgba(99,102,241,0.3);color:var(--purple)">client.stop() → browser renders page → auto-refreshes in 10s</div>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>The W5100 Ethernet shield translates high-level TCP/IP networking requests into low-level SPI communication for the Arduino.</li>
+        <li>An IP address acts as the device's locator on the local network, while a MAC address uniquely identifies the hardware.</li>
+        <li>HTTP is a text-based protocol; the Arduino acts as a lightweight server by listening for incoming GET requests.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>The <code>EthernetServer</code> object listens on port 80. When a client connects, it returns an <code>EthernetClient</code> object.</li>
+        <li>The Arduino parses the incoming HTTP request line by line. Upon receiving a blank line, it sends an HTTP 200 OK response.</li>
+        <li>Dynamic web pages are constructed by mixing static HTML strings with live sensor variables.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Keep HTML responses as small as possible. The Arduino has severely limited SRAM and cannot serve large image assets.</li>
+        <li>Use the <code>F("string")</code> macro to store static HTML text directly in Flash memory, saving precious SRAM.</li>
+        <li>Ensure the Ethernet shield does not conflict with SPI pins (10, 11, 12, 13) used by other hardware like SD cards.</li>
+      </ul>
+    </div>
   </div>
 </section>
 

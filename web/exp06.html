@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Servo and Stepper Motor handling with Arduino — control SG90 servo with potentiometer and 28BYJ-48 stepper motor using ULN2003 driver.">
 <title>Exp 06 — Servo & Stepper | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,7 +13,7 @@
 <body>
 <nav class="topnav">
   <a href="exp05.html">← Exp 05</a>
-  <div class="nav-exp-id">Exp 06 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;">Exp 06 / 10</div>
   <a href="exp07.html">Exp 07 →</a>
 </nav>
 <header class="exp-header">
@@ -27,6 +28,37 @@
 </header>
 
 <main class="exp-main">
+
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>Servo motors use standard PWM (1ms-2ms pulses) for precise angular positioning (0-180 degrees).</li>
+        <li>Stepper motors rotate in discrete steps via electromagnetic coils, offering continuous rotation with high holding torque.</li>
+        <li>The ULN2003 driver chip amplifies the low-current Arduino signals to drive the stepper coils.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>The <code>&lt;Servo.h&gt;</code> library abstracts complex PWM timing into a simple <code>write(angle)</code> command.</li>
+        <li>The <code>&lt;Stepper.h&gt;</code> library converts a desired number of steps into a precise 4-phase coil activation sequence.</li>
+        <li>Mapping a 10-bit analog potentiometer (0-1023) to an 8-bit servo angle (0-180) requires the <code>map()</code> function.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Motors draw inductive current spikes that can reset the Arduino. Always power them from an external 5V/12V supply, sharing a common GND.</li>
+        <li>Do not manually force a servo horn to turn while it is powered, as you will strip the internal plastic gears.</li>
+        <li>If a stepper motor vibrates but fails to turn, double-check your coil wiring sequence (often IN1-IN3-IN2-IN4).</li>
+      </ul>
+    </div>
+  </div>
+</section>
 
 <section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution — Basic Servo Sweep &amp; Stepper Step</h2>

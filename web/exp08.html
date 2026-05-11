@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Exp 08 — DC Motor Control | IoT Lab</title>
+<meta name="description" content="DC Motor Speed Control with L298N H-Bridge — PWM speed, soft-start ramping, and debounced direction toggle with Arduino.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/shared.css">
@@ -12,7 +13,7 @@
 <body>
 <nav class="topnav">
   <a href="exp07.html">← Exp 07</a>
-  <div class="nav-exp-id">Exp 08 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;">Exp 08 / 10</div>
   <a href="exp09.html">Exp 09 →</a>
 </nav>
 <header class="exp-header">
@@ -60,6 +61,37 @@
         <li>Dead-band: &lt;10% PWM → stop cleanly</li>
         <li>Soft-start ramp: ±3 per loop iteration</li>
         <li>Debounce button 50ms before acting</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>An H-Bridge (L298N) allows reversing current flow to change motor direction while isolating the logic circuit from the high-current motor circuit.</li>
+        <li>Applying PWM to the <code>Enable</code> pin of the H-Bridge rapidly pulses the power, controlling the motor's perceived speed.</li>
+        <li>Flyback diodes inside the L298N protect the circuit from high-voltage spikes generated when the motor coils turn off.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>Two directional pins (<code>IN1</code>, <code>IN2</code>) dictate polarity: HIGH/LOW spins forward, LOW/HIGH spins backward.</li>
+        <li>A <code>boolean</code> state variable tracks the current direction, toggling whenever the physical button is pressed.</li>
+        <li>Speed control is achieved by mapping an analog potentiometer reading directly to a PWM duty cycle (0-255).</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Debounce physical switches using a short delay or <code>millis()</code> check to prevent multiple rapid triggers when a mechanical button is pressed.</li>
+        <li>Never switch a motor from full forward to full reverse instantaneously; use a software ramp-down to prevent mechanical stress and current spikes.</li>
+        <li>Ensure the L298N has its 12V and GND connected to the external battery, and <i>only</i> the logic GND connected to the Arduino.</li>
       </ul>
     </div>
   </div>

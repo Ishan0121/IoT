@@ -15,7 +15,7 @@
 <body>
 <nav class="topnav">
   <a href="index.html">← Index</a>
-  <div class="nav-exp-id">Exp 01 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;">Exp 01 / 10</div>
   <a href="exp02.html">Exp 02 →</a>
 </nav>
 
@@ -23,7 +23,7 @@
   <div class="exp-badge">Experiment 01</div>
   <h1>Understanding Arduino UNO<br>Board and Components</h1>
   <p class="exp-subtitle">Identify every pin, chip, and LED. Understand electrical specs, memory architecture, and communication interfaces.</p>
-  <div class="exp-meta-row">
+  <div class="exp-meta-row" >
     <span class="meta-pill">🎯 Objective: Hardware Familiarization</span>
     <span class="meta-pill diff-beginner">Beginner</span>
     <span class="meta-pill">1 Credit</span>
@@ -251,7 +251,38 @@
   </section>
 
   <!-- SIMPLE SOLUTION -->
-  <section class="section reveal">
+  
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>The UNO is powered by an ATmega328P 8-bit AVR microcontroller running at 16 MHz.</li>
+        <li>It abstracts complex low-level hardware registers into simple functions like <code>digitalWrite()</code>.</li>
+        <li>Understanding memory constraints (32KB Flash, 2KB SRAM, 1KB EEPROM) is crucial for complex projects.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>Arduino programs run in an infinite <code>loop()</code> after a single <code>setup()</code> initialization phase.</li>
+        <li>Pins must be explicitly designated as INPUT, OUTPUT, or INPUT_PULLUP to function predictably.</li>
+        <li>Non-blocking logic relies on state variables and time checks instead of freezing the CPU with pauses.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Always map out your pin usage before wiring to avoid hardware conflicts (e.g., I2C on A4/A5).</li>
+        <li>Avoid using pins 0 and 1 (RX/TX) for general I/O to preserve the USB Serial communication channel.</li>
+        <li>Use <code>const int</code> for pin definitions to save RAM and prevent accidental reassignment during runtime.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section reveal">
     <h2 class="section-title">🟢 Simple Solution — Minimal Board Test</h2>
     <div class="solution-banner simple">⭐ Start Here — just 2 functions to confirm the board is alive: blink LED + print to Serial Monitor.</div>
     <div class="code-container">

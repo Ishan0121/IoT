@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Smart Home Sensors with Arduino — integrate PIR motion, DHT11 climate, LDR light, and MQ-2 gas sensors with relay and buzzer in event-driven architecture.">
 <title>Exp 07 — Smart Home Sensors | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,7 +13,7 @@
 <body>
 <nav class="topnav">
   <a href="exp06.html">← Exp 06</a>
-  <div class="nav-exp-id">Exp 07 / 10</div>
+  <div class="nav-exp-id" style="display:flex;   align-items:center; gap:10px;">Exp 07 / 10</div>
   <a href="exp08.html">Exp 08 →</a>
 </nav>
 <header class="exp-header">
@@ -74,6 +75,37 @@
   </div>
 </section>
 
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>PIR sensors detect changes in infrared radiation emitted by moving bodies within their field of view.</li>
+        <li>DHT11 sensors use a capacitive humidity sensor and a thermistor, sending digital data over a custom 1-wire bus.</li>
+        <li>An LDR changes its resistance based on light intensity, forming a voltage divider to create an analog signal.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>Event-driven architecture: the system constantly polls sensor states and reacts immediately to thresholds (e.g., light &lt; 300).</li>
+        <li>Hysteresis must be implemented to prevent outputs like relays from rapidly toggling when a reading hovers exactly on a threshold.</li>
+        <li>Avoid blocking operations so the system can continuously monitor fire, gas, and motion simultaneously.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Group related sensor logic into individual functions to keep the main <code>loop()</code> clean and readable.</li>
+        <li>Account for the MQ-2 gas sensor's required "burn-in" and warm-up time before trusting its analog readings.</li>
+        <li>Isolate relay module power from the Arduino if driving high-current AC loads to prevent MCU resets from inductive spikes.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
 <section class="section reveal">
   <h2 class="section-title">🟢 Simple Solution — PIR Motion Sensor + LED</h2>
   <div class="solution-banner simple">⭐ Start Here — one sensor (PIR), one output (LED). Just 2 pins and a <code>digitalRead</code>.</div>
@@ -118,6 +150,37 @@
   }
   delay(<span class="cn">200</span>);
 }</pre>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>PIR sensors detect changes in infrared radiation emitted by moving bodies within their field of view.</li>
+        <li>DHT11 sensors use a capacitive humidity sensor and a thermistor, sending digital data over a custom 1-wire bus.</li>
+        <li>An LDR changes its resistance based on light intensity, forming a voltage divider to create an analog signal.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>Event-driven architecture: the system constantly polls sensor states and reacts immediately to thresholds (e.g., light &lt; 300).</li>
+        <li>Hysteresis must be implemented to prevent outputs like relays from rapidly toggling when a reading hovers exactly on a threshold.</li>
+        <li>Avoid blocking operations so the system can continuously monitor fire, gas, and motion simultaneously.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Group related sensor logic into individual functions to keep the main <code>loop()</code> clean and readable.</li>
+        <li>Account for the MQ-2 gas sensor's required "burn-in" and warm-up time before trusting its analog readings.</li>
+        <li>Isolate relay module power from the Arduino if driving high-current AC loads to prevent MCU resets from inductive spikes.</li>
+      </ul>
+    </div>
   </div>
 </section>
 
@@ -175,6 +238,37 @@ DHT dht(DHTPIN, DHTTYPE);
 
   delay(<span class="cn">2000</span>); <span class="cm">// DHT11 requires 2s between readings</span>
 }</pre>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>PIR sensors detect changes in infrared radiation emitted by moving bodies within their field of view.</li>
+        <li>DHT11 sensors use a capacitive humidity sensor and a thermistor, sending digital data over a custom 1-wire bus.</li>
+        <li>An LDR changes its resistance based on light intensity, forming a voltage divider to create an analog signal.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>Event-driven architecture: the system constantly polls sensor states and reacts immediately to thresholds (e.g., light &lt; 300).</li>
+        <li>Hysteresis must be implemented to prevent outputs like relays from rapidly toggling when a reading hovers exactly on a threshold.</li>
+        <li>Avoid blocking operations so the system can continuously monitor fire, gas, and motion simultaneously.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Group related sensor logic into individual functions to keep the main <code>loop()</code> clean and readable.</li>
+        <li>Account for the MQ-2 gas sensor's required "burn-in" and warm-up time before trusting its analog readings.</li>
+        <li>Isolate relay module power from the Arduino if driving high-current AC loads to prevent MCU resets from inductive spikes.</li>
+      </ul>
+    </div>
   </div>
 </section>
 

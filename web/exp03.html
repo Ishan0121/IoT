@@ -14,7 +14,7 @@
 <body>
 <nav class="topnav">
   <a href="exp02.html" class="nav-back">← Exp 02</a>
-  <div class="nav-exp-id">Exp 03 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;">Exp 03 / 10</div>
   <a href="exp04.html" class="nav-next">Exp 04 →</a>
 </nav>
 
@@ -66,7 +66,38 @@
   </section>
 
   <!-- SIMPLE SOLUTION -->
-  <section class="section reveal">
+  
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>An LED is a diode; it requires a current-limiting resistor to prevent burning out from excess current.</li>
+        <li>PWM (Pulse Width Modulation) fakes analog output by rapidly toggling a digital pin HIGH and LOW.</li>
+        <li>The duty cycle of a PWM signal (0-255) dictates the perceived brightness of the LED.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li><code>delay()</code> blocks the processor entirely, preventing the Arduino from reading sensors or running other tasks.</li>
+        <li>To multitask, we use <code>millis()</code> to track elapsed time—this is the foundation of non-blocking code.</li>
+        <li>Fading an LED involves incrementing a brightness variable and reversing direction at the 0/255 bounds.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>When using <code>analogWrite()</code> for PWM, you do not actually need to call <code>pinMode()</code> first (though it's good practice).</li>
+        <li>Always connect LEDs with the correct polarity: the longer leg (anode) goes to power, the flat edge (cathode) to GND.</li>
+        <li>Because <code>millis()</code> overflows to zero after ~50 days, always use subtraction (<code>now - last >= interval</code>) for time checks.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section reveal">
     <h2 class="section-title">🟢 Simple Solution — delay() Blink</h2>
     <div class="solution-banner simple">⭐ Start Here — uses only <code>delay()</code> and <code>digitalWrite()</code>. Perfect for your first sketch.</div>
     <!-- Simple sim -->
@@ -265,7 +296,7 @@
         <div class="note-body"><code>millis()</code> returns an <code>unsigned long</code> that overflows back to 0 after ~49.7 days. Using subtraction (<code>now - lastToggle</code>) handles this automatically and correctly — the math wraps safely because both variables are unsigned.</div>
       </div>
       <div class="note-card note-info">
-        <div class="note-title">📐 resistor Calculation</div>
+        <div class="note-title">📐 Resistor Calculation</div>
         <div class="note-body">R = (Vsupply − Vforward) / I_desired<br>= (5V − 2V) / 0.015A = 200Ω<br>Use 220Ω (nearest standard value). For 3.3V supply: (3.3V − 2V) / 0.01A = 130Ω → use 150Ω. Always limit LED current to 10–20mA max.</div>
       </div>
     </div>
@@ -306,4 +337,5 @@
 <script src="js/experiments/exp03-sim.js"></script>
 
 
+</body>
 </html>

@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Interfacing Arduino with Cloud via ThingSpeak — send live sensor data over WiFi using ESP32 or ESP8266, view real-time graphs via HTTP REST API.">
 <title>Exp 10 — Arduino Cloud (ThingSpeak) | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,13 +13,13 @@
 <body>
 <nav class="topnav">
   <a href="exp09.html">← Exp 09</a>
-  <div class="nav-exp-id">Exp 10 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;"><img src="assets/favicon.svg" alt="Logo" style="width:24px; height:24px; border-radius:6px;">Exp 10 / 10</div>
   <a href="index.html">↩ Index</a>
 </nav>
 <header class="exp-header">
   <div class="exp-badge">Experiment 10</div>
   <h1>Interfacing Arduino<br>with Cloud (ThingSpeak)</h1>
-  <p class="exp-subtitle">Send live sensor data to ThingSpeak IoT cloud over WiFi using ESP8266. View real-time graphs from anywhere in the world via HTTP REST API.</p>
+  <p class="exp-subtitle">Send live sensor data to ThingSpeak IoT cloud over WiFi using ESP32 or ESP8266. View real-time graphs from anywhere in the world via HTTP REST API.</p>
   <div class="exp-meta-row">
     <span class="meta-pill">🎯 ESP32/ESP8266 · ThingSpeak · WiFi · HTTP REST</span>
     <span class="meta-pill diff-advanced">Advanced</span>
@@ -108,6 +109,37 @@ http://arduino.esp8266.com/stable/package_esp8266com_index.json
 Tools → Board → Boards Manager → search "esp8266" → Install
 Tools → Board → ESP8266 Boards → NodeMCU 1.0 (or Wemos D1 Mini)
 Tools → Upload Speed → 115200</pre>
+    </div>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>REST APIs allow edge devices to send data to the cloud via standard HTTP GET or POST requests formatted with unique API keys.</li>
+        <li>The ESP8266 and ESP32 contain full TCP/IP networking stacks and radio transceivers alongside their main processing cores.</li>
+        <li>Cloud platforms like ThingSpeak ingest these HTTP requests and plot the data into time-series visual dashboards.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>The ESP board connects to a local WiFi network, then builds a custom URL string containing the sensor values and API key.</li>
+        <li>It opens a TCP socket to the ThingSpeak server, sends the constructed GET request, and reads the server's HTTP response code.</li>
+        <li>A successful upload increments a timer, forcing the device to wait 15 seconds (the API rate limit) before sending the next payload.</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Call <code>yield()</code> frequently inside tight loops on ESP boards to allow the background WiFi stack (LwIP) to process networking tasks without crashing.</li>
+        <li>Never commit your hardcoded WiFi credentials or API keys to a public GitHub repository.</li>
+        <li>For battery-powered IoT applications, use Deep Sleep modes between uploads rather than <code>delay()</code> to save power.</li>
+      </ul>
     </div>
   </div>
 </section>

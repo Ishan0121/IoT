@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="Ultrasonic Sensor HC-SR04 with Arduino — measure distance with pulseIn(), implement danger/caution/safe zones with LEDs and non-blocking buzzer alerts.">
 <title>Exp 05 — Ultrasonic Sensor | IoT Lab</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -12,7 +13,7 @@
 <body>
 <nav class="topnav">
   <a href="exp04.html">← Exp 04</a>
-  <div class="nav-exp-id">Exp 05 / 10</div>
+  <div class="nav-exp-id" style="display:flex; align-items:center; gap:10px;">Exp 05 / 10</div>
   <a href="exp06.html">Exp 06 →</a>
 </nav>
 <header class="exp-header">
@@ -49,6 +50,37 @@
     <div class="flow-node" style="--nc:#ec4899">
       <div class="fn-title">4. Calculate</div>
       <div class="fn-desc">distance = (duration × 0.0343) ÷ 2<br>(speed of sound ≈ 343 m/s)</div>
+    </div>
+  </div>
+</section>
+
+
+<section class="section reveal">
+  <h2 class="section-title">🧠 Theory, Logic & Tactics</h2>
+  <div class="cards-3">
+    <div class="info-card" style="--card-accent:#4f8ef7">
+      <div class="info-card-title">📖 Theory</div>
+      <ul class="info-list">
+        <li>The HC-SR04 emits a 40kHz ultrasonic sound wave burst and measures the time it takes to bounce back.</li>
+        <li>Distance is calculated using the speed of sound: <code>Distance = (Time × Speed) / 2</code> (divided by 2 for the round trip).</li>
+        <li>Sound travels at ~343 meters per second in dry air at 20°C (or about 0.034 cm per microsecond).</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#22c55e">
+      <div class="info-card-title">⚙️ Logic</div>
+      <ul class="info-list">
+        <li>The sensor requires a 10-microsecond HIGH pulse on the <code>trig</code> pin to initiate the ping.</li>
+        <li>The <code>pulseIn()</code> function halts the program briefly to measure the duration of the returning HIGH pulse on the <code>echo</code> pin.</li>
+        <li>Thresholds (e.g., &lt; 10cm) are used to trigger discrete alert zones like "Danger" or "Caution".</li>
+      </ul>
+    </div>
+    <div class="info-card" style="--card-accent:#f59e0b">
+      <div class="info-card-title">♟️ Tactics</div>
+      <ul class="info-list">
+        <li>Ultrasonic readings can be erratic due to sound scattering. Use an averaging array or a simple low-pass filter to smooth the data.</li>
+        <li><code>pulseIn()</code> is a blocking function; set a timeout parameter to prevent it from hanging if the ping never returns.</li>
+        <li>Do not place the sensor behind glass or soft sound-absorbing materials, as this will result in failed readings.</li>
+      </ul>
     </div>
   </div>
 </section>
